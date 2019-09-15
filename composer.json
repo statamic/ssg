@@ -1,0 +1,32 @@
+{
+    "name": "statamic/static-site-generator",
+    "type": "statamic-addon",
+    "autoload": {
+        "psr-4": {
+            "Statamic\\StaticSite\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests"
+        }
+    },
+    "extra": {
+        "statamic": {
+            "name": "Static Site Generator",
+            "description": "Static Site Generator addon"
+        },
+        "laravel": {
+            "providers": [
+                "Statamic\\StaticSite\\ServiceProvider"
+            ]
+        }
+    },
+    "require": {
+        "statamic/cms": "dev-master"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^4.0"
+    },
+    "minimum-stability": "dev"
+}
