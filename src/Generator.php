@@ -26,6 +26,8 @@ class Generator
     protected $request;
     protected $router;
     protected $after;
+    protected $count = 0;
+    protected $skips = 0;
 
     public function __construct(Application $app, Filesystem $files, Router $router)
     {
@@ -52,6 +54,10 @@ class Generator
             ->copyFiles();
 
         Partyline::info('Static site generated into ' . $this->config['destination']);
+
+        if ($this->skips) {
+            Partyline::warn("[!] {$this->skips}/{$this->count} pages not generated");
+        }
 
         if ($this->after) {
             call_user_func($this->after);
@@ -117,6 +123,8 @@ class Generator
         });
 
         $pages->each(function ($page) use ($request) {
+            $this->count++;
+
             $request->setPage($page);
 
             Partyline::comment("Generating {$page->url()}...");
@@ -125,6 +133,7 @@ class Generator
                 $page->generate($request);
                 Partyline::line(sprintf('%s%s %s', "\x1B[1A\x1B[2K", '<info>[✔]</info>', $page->url()));
             } catch (NotGeneratedException $e) {
+                $this->skips++;
                 Partyline::line($this->notGeneratedMessage($e));
             }
         });
