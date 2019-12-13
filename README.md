@@ -16,7 +16,7 @@ Install the package using Composer:
 composer require statamic/static-site-generator
 ```
 
-You may also publish the config file:
+You may also publish the config file into `config/statamic/static_site.php`:
 
 ```
 php artisan vendor:publish --provider="Statamic\StaticSite\ServiceProvider"
