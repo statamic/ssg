@@ -23,7 +23,7 @@
         }
     },
     "require": {
-        "statamic/cms": "dev-master"
+        "statamic/cms": "3.0.*@beta"
     },
     "require-dev": {
         "orchestra/testbench": "^4.0"
