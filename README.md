@@ -65,4 +65,5 @@ This example assumes you will be authoring content locally, committing to Git, a
 - Link the site to your GitHub repository
 - Add build command `php please ssg:generate`
 - Set publish directory `storage/app/static`
-- Add environment variable `PHP_VERSION` `7.2`
+- Add environment variable: `PHP_VERSION` `7.2`
+- Add the Netlify site URL as an environment variable: `APP_URL` `https://thats-numberwang-47392.netlify.com`
