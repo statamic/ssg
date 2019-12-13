@@ -10,13 +10,14 @@ use Statamic\Routing\Router;
 use League\Flysystem\Adapter\Local;
 use Statamic\Imaging\ImageGenerator;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Http\RedirectResponse;
 use Statamic\Imaging\StaticUrlBuilder;
 use Statamic\Contracts\Imaging\UrlBuilder;
-use Statamic\Exceptions\RedirectException;
 use League\Flysystem\Filesystem as Flysystem;
 use Statamic\Exceptions\UrlNotFoundException;
 use Wilderborn\Partyline\Facade as Partyline;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class Generator
 {
@@ -184,9 +185,11 @@ class Generator
             case UrlNotFoundException::class:
                 $message = 'Resulted in 404';
                 break;
-            case RedirectException::class:
-                $message = sprintf('Resulted in a %s redirect to %s', $previous->getStatusCode(), $previous->getUrl());
-                break;
+            case HttpResponseException::class:
+                if (($response = $previous->getResponse()) instanceof RedirectResponse) {
+                    $message = sprintf('Resulted in a %s redirect to %s', $response->getStatusCode(), $response->getTargetUrl());
+                    break;
+                }
             default:
                 $message = $e->getMessage();
         }
