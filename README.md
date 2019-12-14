@@ -57,9 +57,11 @@ class AppServiceProvider extends Provider
 
 ## Deployment Examples
 
-### Push to Netlify
+These examples assumes your workflow will be to author content **locally** and _not_ using the control panel in production.
 
-This example assumes you will be authoring content locally, committing to Git, and triggering a deployment by pushing to GitHub. No Control Panel usage on production.
+### Deploy to [Netlify](https://netlify.com)
+
+Deployments are triggered by committing to Git and pushing to GitHub.
 
 - Create a site in your [Netlify](https://netlify.com) account
 - Link the site to your GitHub repository
@@ -67,3 +69,10 @@ This example assumes you will be authoring content locally, committing to Git, a
 - Set publish directory `storage/app/static`
 - Add environment variable: `PHP_VERSION` `7.2`
 - Add the Netlify site URL as an environment variable: `APP_URL` `https://thats-numberwang-47392.netlify.com`
+
+### Deploy to Surge.sh
+
+**Prerequisite:** Install with `npm install --global surge`. Your first deployment will involve creating an account via command line.
+
+- Build with command `php please ssg:generate`
+- Deploy with `surge storage/app/static`
