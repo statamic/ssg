@@ -25,23 +25,23 @@ class Request extends \Illuminate\Http\Request
 
     public function getScheme()
     {
-        return explode('://', $this->config['base_url'])[0];
+        return parse_url($this->config['base_url'])['scheme'];
     }
 
     public function getHttpHost()
     {
-        $withoutScheme = rtrim(explode('://', $this->config['base_url'])[1], '/');
+        $host = parse_url($this->config['base_url'])['host'];
 
         $length = strlen($this->getBaseUrl());
 
-        return ($length === 0) ? $withoutScheme : substr($withoutScheme, 0, -$length);
+        return ($length === 0) ? $host : substr($host, 0, -$length);
     }
 
     protected function prepareBaseUrl()
     {
-        $withoutScheme = rtrim(explode('://', $this->config['base_url'])[1], '/');
+        $host = parse_url($this->config['base_url'])['host'];
 
-        $base = Arr::get(explode('/', $withoutScheme), 1, '');
+        $base = Arr::get(explode('/', $host), 1, '');
 
         return $base !== '' ? '/'.$base : $base;
     }
