@@ -70,7 +70,7 @@ Deployments are triggered by committing to Git and pushing to GitHub.
 - Add environment variable: `PHP_VERSION` `7.2`
 - Add the Netlify site URL as an environment variable: `APP_URL` `https://thats-numberwang-47392.netlify.com`
 
-### Deploy to Surge.sh
+### Deploy to [Surge](https://surge.sh)
 
 **Prerequisite:** Install with `npm install --global surge`. Your first deployment will involve creating an account via command line.
 
