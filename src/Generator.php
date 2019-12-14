@@ -29,6 +29,7 @@ class Generator
     protected $after;
     protected $count = 0;
     protected $skips = 0;
+    protected $viewPaths;
 
     public function __construct(Application $app, Filesystem $files, Router $router)
     {
@@ -49,6 +50,7 @@ class Generator
     {
         $this
             ->bindGlide()
+            ->backupViewPaths()
             ->clearDirectory()
             ->createContentFiles()
             ->createSymlinks()
@@ -78,6 +80,13 @@ class Generator
                 'route' => URL::tidy($this->config['base_url'] . '/' . $directory)
             ]);
         });
+
+        return $this;
+    }
+
+    public function backupViewPaths()
+    {
+        $this->viewPaths = view()->getFinder()->getPaths();
 
         return $this;
     }
@@ -124,6 +133,8 @@ class Generator
         });
 
         $pages->each(function ($page) use ($request) {
+            view()->getFinder()->setPaths($this->viewPaths);
+
             $this->count++;
 
             $request->setPage($page);
