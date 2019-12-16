@@ -76,3 +76,11 @@ Deployments are triggered by committing to Git and pushing to GitHub.
 
 - Build with command `php please ssg:generate`
 - Deploy with `surge storage/app/static`
+
+### Deploy to [Firebase hosting](https://firebase.google.com/products/hosting/)
+
+**Prerequisite:** Follow the instructions to [get started with Firebase hosting](https://firebase.google.com/docs/hosting/quickstart)
+
+- Once hosting is set up, make sure the `public` config in your `firebase.json` is set to `storage/app/static`
+- (Optionally) Add a `predeploy` config to run `php please ssg:generate`
+- Run `firebase deploy`
