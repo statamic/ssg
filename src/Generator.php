@@ -118,7 +118,13 @@ class Generator
     {
         foreach ($this->config['copy'] ?? [] as $source => $dest) {
             $dest = $this->config['destination'] . '/' . $dest;
-            $this->files->copyDirectory($source, $dest);
+
+            if (is_file($source)) {
+                $this->files->copy($source, $dest);
+            } else {
+                $this->files->copyDirectory($source, $dest);
+            }
+            
             Partyline::line("$source copied to to $dest");
         }
     }
