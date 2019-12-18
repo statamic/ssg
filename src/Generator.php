@@ -187,7 +187,7 @@ class Generator
         $routes = $this->router->standardize($routes->all());
 
         return collect($routes)->map(function ($data, $url) {
-            return $this->createPage(new Route($url, $data));
+            return $this->createPage(new Route(URL::removeSiteUrl($url), $data));
         });
     }
 
