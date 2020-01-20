@@ -19,7 +19,7 @@ Install the package using Composer:
 composer require statamic/ssg
 ```
 
-You may also publish the config file into `config/statamic/static_site.php`:
+You may also publish the config file into `config/statamic/ssg.php`:
 
 ```
 php artisan vendor:publish --provider="Statamic\StaticSite\ServiceProvider"

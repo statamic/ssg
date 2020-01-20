@@ -17,8 +17,8 @@ class ServiceProvider extends LaravelServiceProvider
 
     public function boot()
     {
-        $this->publishes([__DIR__.'/../config/static_site.php' => config_path('statamic/static_site.php')]);
-        $this->mergeConfigFrom(__DIR__.'/../config/static_site.php', 'statamic.static_site');
+        $this->publishes([__DIR__.'/../config/ssg.php' => config_path('statamic/ssg.php')]);
+        $this->mergeConfigFrom(__DIR__.'/../config/ssg.php', 'statamic.ssg');
 
         if ($this->app->runningInConsole()) {
             $this->commands([

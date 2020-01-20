@@ -36,7 +36,7 @@ class Generator
         $this->app = $app;
         $this->files = $files;
         $this->router = $router;
-        $this->config = config('statamic.static_site');
+        $this->config = config('statamic.ssg');
     }
 
     public function after($after)
