@@ -16,7 +16,7 @@ No license is required during the Statamic 3 beta period.
 Install the package using Composer:
 
 ```
-composer require statamic/static-site-generator
+composer require statamic/ssg
 ```
 
 You may also publish the config file into `config/statamic/static_site.php`:
