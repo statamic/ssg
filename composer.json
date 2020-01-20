@@ -1,5 +1,5 @@
 {
-    "name": "statamic/static-site-generator",
+    "name": "statamic/ssg",
     "type": "statamic-addon",
     "autoload": {
         "psr-4": {
