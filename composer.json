@@ -1,6 +1,7 @@
 {
     "name": "statamic/ssg",
     "type": "statamic-addon",
+    "description": "Static site generator for Statamic 3.",
     "autoload": {
         "psr-4": {
             "Statamic\\StaticSite\\": "src"
