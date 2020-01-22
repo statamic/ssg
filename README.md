@@ -19,11 +19,13 @@ Install the package using Composer:
 composer require statamic/ssg
 ```
 
-You may also publish the config file into `config/statamic/ssg.php`:
+If you want or need to customize the way the site is generated, you can do so by publishing and modifying the config file with the following command: 
 
 ```
 php artisan vendor:publish --provider="Statamic\StaticSite\ServiceProvider"
 ```
+
+The config file will be in `config/statamic/ssg.php`. This is optional and you can do it anytime.
 
 
 ## Usage
