@@ -3,6 +3,8 @@
 namespace Statamic\StaticSite;
 
 use Statamic\Facades\URL;
+use Statamic\Support\Str;
+use Statamic\Facades\Site;
 use Illuminate\Support\Arr;
 use Statamic\Facades\Entry;
 use League\Flysystem\Adapter\Local;
@@ -44,6 +46,8 @@ class Generator
 
     public function generate()
     {
+        Site::setCurrent(Site::default()->handle());
+
         $this
             ->bindGlide()
             ->backupViewPaths()
@@ -127,14 +131,12 @@ class Generator
 
     protected function createContentFiles()
     {
-        $pages = $this->pages();
-
         $request = tap(Request::capture(), function ($request) {
             $request->setConfig($this->config);
             $this->app->instance('request', $request);
         });
 
-        $pages->each(function ($page) use ($request) {
+        $this->pages()->each(function ($page) use ($request) {
             view()->getFinder()->setPaths($this->viewPaths);
 
             $this->count++;
@@ -157,7 +159,9 @@ class Generator
 
     protected function pages()
     {
-        return $this->content()
+        return collect()
+            ->merge($this->urls())
+            ->merge($this->content())
             ->values()
             ->reject(function ($page) {
                 return in_array($page->url(), $this->config['exclude']);
@@ -171,6 +175,14 @@ class Generator
         return Entry::all()->map(function ($content) {
             return $this->createPage($content);
         })->filter->isGeneratable();
+    }
+
+    protected function urls()
+    {
+        return collect($this->config['urls'] ?? [])->map(function ($url) {
+            $url = Str::start($url, '/');
+            return $this->createPage(new Route($url));
+        });
     }
 
     protected function createPage($content)
