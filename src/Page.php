@@ -4,6 +4,8 @@ namespace Statamic\StaticSite;
 
 use Exception;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class Page
 {
@@ -26,7 +28,7 @@ class Page
     public function generate($request)
     {
         try {
-            $this->write($request);
+            return $this->write($request);
         } catch (Exception $e) {
             throw new NotGeneratedException($this, $e);
         }
@@ -34,13 +36,22 @@ class Page
 
     protected function write($request)
     {
-        $html = $this->content->toResponse($request)->getContent();
+        try {
+            $response = $this->content->toResponse($request);
+        } catch (HttpResponseException $e) {
+            $response = $e->getResponse();
+            throw_unless($response instanceof RedirectResponse, $e);
+        }
+
+        $html = $response->getContent();
 
         if (! $this->files->exists($this->directory())) {
             $this->files->makeDirectory($this->directory(), 0755, true);
         }
 
         $this->files->put($this->path(), $html);
+
+        return new GeneratedPage($this, $response);
     }
 
     public function directory()

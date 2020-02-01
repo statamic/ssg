@@ -10,14 +10,13 @@ use Statamic\Facades\Entry;
 use League\Flysystem\Adapter\Local;
 use Statamic\Imaging\ImageGenerator;
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Http\RedirectResponse;
 use Statamic\Imaging\StaticUrlBuilder;
 use Statamic\Contracts\Imaging\UrlBuilder;
 use League\Flysystem\Filesystem as Flysystem;
 use Facade\Ignition\Exceptions\ViewException;
 use Wilderborn\Partyline\Facade as Partyline;
 use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Statamic\Exceptions\NotFoundHttpException as StatamicNotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException as SymfonyNotFoundHttpException;
 
@@ -30,6 +29,7 @@ class Generator
     protected $after;
     protected $count = 0;
     protected $skips = 0;
+    protected $warnings = 0;
     protected $viewPaths;
 
     public function __construct(Application $app, Filesystem $files)
@@ -62,6 +62,10 @@ class Generator
 
         if ($this->skips) {
             Partyline::warn("[!] {$this->skips}/{$this->count} pages not generated");
+        }
+
+        if ($this->warnings) {
+            Partyline::warn("[!] {$this->warnings}/{$this->count} pages generated with warnings");
         }
 
         if ($this->after) {
@@ -148,12 +152,18 @@ class Generator
             Partyline::comment("Generating {$page->url()}...");
 
             try {
-                $page->generate($request);
-                Partyline::line(sprintf('%s%s %s', "\x1B[1A\x1B[2K", '<info>[✔]</info>', $page->url()));
+                $generated = $page->generate($request);
             } catch (NotGeneratedException $e) {
                 $this->skips++;
                 Partyline::line($this->notGeneratedMessage($e));
+                return;
             }
+
+            if ($generated->hasWarning()) {
+                $this->warnings++;
+            }
+
+            Partyline::line($generated->consoleMessage());
         });
 
         return $this;
@@ -205,11 +215,9 @@ class Generator
             case StatamicNotFoundHttpException::class:
                 $message = 'Resulted in 404';
                 break;
-            case HttpResponseException::class:
-                if (($response = $previous->getResponse()) instanceof RedirectResponse) {
-                    $message = sprintf('Resulted in a %s redirect to %s', $response->getStatusCode(), $response->getTargetUrl());
-                    break;
-                }
+            case HttpException::class:
+                $message = 'Resulted in ' . $previous->getStatusCode();
+                break;
             default:
                 $message = $e->getMessage();
         }
