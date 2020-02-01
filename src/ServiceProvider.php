@@ -2,7 +2,6 @@
 
 namespace Statamic\StaticSite;
 
-use Statamic\Routing\Router;
 use Statamic\StaticSite\Generator;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 
@@ -11,7 +10,7 @@ class ServiceProvider extends LaravelServiceProvider
     public function register()
     {
         $this->app->singleton(Generator::class, function ($app) {
-            return new Generator($app, $app['files'], $app[Router::class]);
+            return new Generator($app, $app['files']);
         });
     }
 

@@ -5,8 +5,6 @@ namespace Statamic\StaticSite;
 use Statamic\Facades\URL;
 use Illuminate\Support\Arr;
 use Statamic\Facades\Entry;
-use Statamic\Routing\Route;
-use Statamic\Routing\Router;
 use League\Flysystem\Adapter\Local;
 use Statamic\Imaging\ImageGenerator;
 use Illuminate\Filesystem\Filesystem;
@@ -25,17 +23,15 @@ class Generator
     protected $files;
     protected $config;
     protected $request;
-    protected $router;
     protected $after;
     protected $count = 0;
     protected $skips = 0;
     protected $viewPaths;
 
-    public function __construct(Application $app, Filesystem $files, Router $router)
+    public function __construct(Application $app, Filesystem $files)
     {
         $this->app = $app;
         $this->files = $files;
-        $this->router = $router;
         $this->config = config('statamic.ssg');
     }
 
@@ -162,7 +158,6 @@ class Generator
     protected function pages()
     {
         return $this->content()
-            ->merge($this->routes())
             ->values()
             ->reject(function ($page) {
                 return in_array($page->url(), $this->config['exclude']);
@@ -176,19 +171,6 @@ class Generator
         return Entry::all()->map(function ($content) {
             return $this->createPage($content);
         })->filter->isGeneratable();
-    }
-
-    protected function routes()
-    {
-        $routes = collect(config('statamic.routes.routes'))->reject(function ($data, $url) {
-            return $this->router->hasWildCard($url);
-        });
-
-        $routes = $this->router->standardize($routes->all());
-
-        return collect($routes)->map(function ($data, $url) {
-            return $this->createPage(new Route($url, $data));
-        });
     }
 
     protected function createPage($content)
