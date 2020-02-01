@@ -13,12 +13,8 @@ use Illuminate\Filesystem\Filesystem;
 use Statamic\Imaging\StaticUrlBuilder;
 use Statamic\Contracts\Imaging\UrlBuilder;
 use League\Flysystem\Filesystem as Flysystem;
-use Facade\Ignition\Exceptions\ViewException;
 use Wilderborn\Partyline\Facade as Partyline;
 use Illuminate\Contracts\Foundation\Application;
-use Symfony\Component\HttpKernel\Exception\HttpException;
-use Statamic\Exceptions\NotFoundHttpException as StatamicNotFoundHttpException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException as SymfonyNotFoundHttpException;
 
 class Generator
 {
@@ -155,7 +151,7 @@ class Generator
                 $generated = $page->generate($request);
             } catch (NotGeneratedException $e) {
                 $this->skips++;
-                Partyline::line($this->notGeneratedMessage($e));
+                Partyline::line($e->consoleMessage());
                 return;
             }
 
@@ -200,28 +196,5 @@ class Generator
     protected function createPage($content)
     {
         return new Page($this->files, $this->config, $content);
-    }
-
-    protected function notGeneratedMessage($e)
-    {
-        $previous = $e->getPrevious();
-
-        if ($previous instanceof ViewException) {
-            $previous = $previous->getPrevious();
-        }
-
-        switch (get_class($previous)) {
-            case SymfonyNotFoundHttpException::class:
-            case StatamicNotFoundHttpException::class:
-                $message = 'Resulted in 404';
-                break;
-            case HttpException::class:
-                $message = 'Resulted in ' . $previous->getStatusCode();
-                break;
-            default:
-                $message = $e->getMessage();
-        }
-
-        return sprintf('%s %s (%s)', "\x1B[1A\x1B[2K<fg=red>[✘]</>", $e->getPage()->url(), $message);
     }
 }
