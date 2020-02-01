@@ -14,10 +14,12 @@ use Illuminate\Http\RedirectResponse;
 use Statamic\Imaging\StaticUrlBuilder;
 use Statamic\Contracts\Imaging\UrlBuilder;
 use League\Flysystem\Filesystem as Flysystem;
-use Statamic\Exceptions\UrlNotFoundException;
+use Facade\Ignition\Exceptions\ViewException;
 use Wilderborn\Partyline\Facade as Partyline;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Statamic\Exceptions\NotFoundHttpException as StatamicNotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException as SymfonyNotFoundHttpException;
 
 class Generator
 {
@@ -124,7 +126,7 @@ class Generator
             } else {
                 $this->files->copyDirectory($source, $dest);
             }
-            
+
             Partyline::line("$source copied to to $dest");
         }
     }
@@ -192,8 +194,15 @@ class Generator
 
     protected function notGeneratedMessage($e)
     {
-        switch (get_class($previous = $e->getPrevious())) {
-            case UrlNotFoundException::class:
+        $previous = $e->getPrevious();
+
+        if ($previous instanceof ViewException) {
+            $previous = $previous->getPrevious();
+        }
+
+        switch (get_class($previous)) {
+            case SymfonyNotFoundHttpException::class:
+            case StatamicNotFoundHttpException::class:
                 $message = 'Resulted in 404';
                 break;
             case HttpResponseException::class:

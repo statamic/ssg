@@ -24,6 +24,10 @@ class Route
         $response = $kernel->handle($request);
         $kernel->terminate($request, $response);
 
+        if ($e = $response->exception) {
+            throw $e;
+        }
+
         return $response;
     }
 }
