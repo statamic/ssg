@@ -90,6 +90,7 @@ After your site has an APP_URL...
 #### S3 Asset Containers
 
 If you are storing your assets in an S3 bucket, the `.env`s used will need to be different to the defaults that come with Laravel, as they are reserved by Netlify. For example, you can amend them to the following:
+
 ```sh
 # .env
 AWS_S3_ACCESS_KEY_ID=
@@ -102,15 +103,15 @@ AWS_URL=
 Be sure to also update these in your `s3` disk configuration:
 
 ```php
-        // config/filesystems.php
-        's3' => [
-            'driver' => 's3',
-            'key' => env('AWS_S3_ACCESS_KEY_ID'),
-            'secret' => env('AWS_S3_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_S3_DEFAULT_REGION'),
-            'bucket' => env('AWS_S3_BUCKET'),
-            'url' => env('AWS_URL'),
-        ],
+// config/filesystems.php
+'s3' => [
+    'driver' => 's3',
+    'key' => env('AWS_S3_ACCESS_KEY_ID'),
+    'secret' => env('AWS_S3_SECRET_ACCESS_KEY'),
+    'region' => env('AWS_S3_DEFAULT_REGION'),
+    'bucket' => env('AWS_S3_BUCKET'),
+    'url' => env('AWS_URL'),
+],
 ```
 
 ### Deploy to [Surge](https://surge.sh)
