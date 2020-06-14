@@ -168,7 +168,6 @@ class Generator
     protected function pages()
     {
         return collect()
-            ->merge($this->urls())
             ->merge($this->content())
             ->values()
             ->reject(function ($page) {
@@ -179,7 +178,9 @@ class Generator
                 }
 
                 return in_array($page->url(), $this->config['exclude']);
-            })->sortBy(function ($page) {
+            })
+            ->merge($this->urls())
+            ->sortBy(function ($page) {
                 return str_replace('/', '', $page->url());
             });
     }
