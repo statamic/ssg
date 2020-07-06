@@ -78,7 +78,7 @@ These examples assumes your workflow will be to author content **locally** and _
 Deployments are triggered by committing to Git and pushing to GitHub.
 
 - Create a site in your [Netlify](https://netlify.com) account
-- Link the site to your GitHub repository
+- Link the site to your desired GitHub repository
 - Add build command `php please ssg:generate`
 - Set publish directory `storage/app/static`
 - Add environment variable: `PHP_VERSION` `7.2`
@@ -113,6 +113,50 @@ Be sure to also update these in your `s3` disk configuration:
     'url' => env('AWS_URL'),
 ],
 ```
+
+### Deploy to [Vercel](https://vercel.com)
+
+Deployments are triggered by committing to Git and pushing to GitHub.
+
+- Import a new site in your [Vercel](https://vercel.com) account
+- Link the site to your desired GitHub repository
+- Add build command `./build.sh`
+- Set output directory to `storage/app/static`
+- Add environment variable in your project settings: `APP_KEY` `<copy & paste from dev>`
+- Create the following `build.sh` file to install PHP, Composer, and run the `ssh:generate` command:
+
+```
+#!/bin/sh
+
+# Install PHP & WGET
+yum install -y amazon-linux-extras
+amazon-linux-extras enable php7.4
+yum clean metadata
+yum install php php-{common,curl,mbstring,gd,gettext,bcmath,json,xml,fpm,intl,zip,imap}
+yum install wget
+
+# INSTALL COMPOSER
+EXPECTED_CHECKSUM="$(wget -q -O - https://composer.github.io/installer.sig)"
+php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+ACTUAL_CHECKSUM="$(php -r "echo hash_file('sha384', 'composer-setup.php');")"
+
+if [ "$EXPECTED_CHECKSUM" != "$ACTUAL_CHECKSUM" ]
+then
+    >&2 echo 'ERROR: Invalid installer checksum'
+    rm composer-setup.php
+    exit 1
+fi
+
+php composer-setup.php --quiet
+rm composer-setup.php
+
+# INSTALL COMPOSER DEPENDENCIES
+php composer.phar install
+
+# BUILD STATIC SITE
+php please ssg:generate
+```
+
 
 ### Deploy to [Surge](https://surge.sh)
 
