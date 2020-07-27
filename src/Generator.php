@@ -21,6 +21,7 @@ class Generator
     protected $app;
     protected $files;
     protected $config;
+    protected $profile;
     protected $request;
     protected $after;
     protected $count = 0;
@@ -42,9 +43,11 @@ class Generator
         return $this;
     }
 
-    public function generate()
+    public function generate($profile)
     {
         Site::setCurrent(Site::default()->handle());
+
+        $this->profile = $profile;
 
         $this
             ->bindGlide()
@@ -171,6 +174,8 @@ class Generator
             ->merge($this->content())
             ->values()
             ->reject(function ($page) {
+                if ($this->profile !== 'default') return true;
+
                 foreach ($this->config['exclude'] as $url) {
                     if (Str::endsWith($url, '*')) {
                         if (Str::is($url, $page->url())) return true;
@@ -194,10 +199,15 @@ class Generator
 
     protected function urls()
     {
-        return collect($this->config['urls'] ?? [])->map(function ($url) {
-            $url = Str::start($url, '/');
-            return $this->createPage(new Route($url));
-        });
+      $urls = array_merge(
+          $this->config['urls'] ?? [],
+          $this->config['profiles'][$this->profile] ?? [],
+      );
+
+      return collect(array_unique($urls))->map(function ($url) {
+          $url = Str::start($url, '/');
+          return $this->createPage(new Route($url));
+      });
     }
 
     protected function createPage($content)

@@ -19,7 +19,7 @@ Install the package using Composer:
 composer require statamic/ssg
 ```
 
-If you want or need to customize the way the site is generated, you can do so by publishing and modifying the config file with the following command: 
+If you want or need to customize the way the site is generated, you can do so by publishing and modifying the config file with the following command:
 
 ```
 php artisan vendor:publish --provider="Statamic\StaticSite\ServiceProvider"
@@ -50,6 +50,28 @@ Routes will not automatically be generated. You can add any additional URLs you 
 ],
 ```
 
+## Profiles
+
+You may wish to generate specific parts of the site for testing, or to partially sync a large site. In these cases, you may optionally use named profiles to generate a group of pages.
+
+``` php
+'profiles' => [
+  'news' => [
+    '/news-route',
+    '/news-route',
+  ],
+  'about' => [
+    '/about-route',
+    '/about-route',
+  ],
+],
+```
+
+You may call the profile with the following command:
+
+```
+php please ssg:generate --profile=news
+```
 
 ## Post-generation callback
 

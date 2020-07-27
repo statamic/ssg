@@ -21,7 +21,7 @@ class StaticSiteGenerate extends Command
      *
      * @var string
      */
-    protected $signature = 'statamic:ssg:generate';
+    protected $signature = 'statamic:ssg:generate {--profile=default}';
 
     /**
      * The console command description.
@@ -51,6 +51,8 @@ class StaticSiteGenerate extends Command
     {
         Partyline::bind($this);
 
-        $this->generator->generate();
+        $profile = $this->option('profile');
+
+        $this->generator->generate($profile);
     }
 }
