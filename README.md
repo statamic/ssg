@@ -52,7 +52,7 @@ Routes will not automatically be generated. You can add any additional URLs you 
 
 ## Profiles
 
-You may wish to generate specific parts of the site for testing, or to partially sync a large site. In these cases, you may optionally use named profiles to generate a group of pages.
+You may wish to generate specific parts of the site for testing, or to partially sync a large site. In these cases, you may use named profiles to generate a group of pages.
 
 ``` php
 'profiles' => [
@@ -61,8 +61,7 @@ You may wish to generate specific parts of the site for testing, or to partially
     '/news-route',
   ],
   'about' => [
-    '/about-route',
-    '/about-route',
+    '/about/*',
   ],
 ],
 ```

@@ -47,9 +47,8 @@ class Generator
     {
         Site::setCurrent(Site::default()->handle());
 
-        $this->profile = $profile;
-
         $this
+            ->setProfile($profile)
             ->bindGlide()
             ->backupViewPaths()
             ->clearDirectory()
@@ -70,6 +69,17 @@ class Generator
         if ($this->after) {
             call_user_func($this->after);
         }
+    }
+
+    public function setProfile($profile)
+    {
+        $this->profile = $profile;
+
+        if ($profile !== 'default' && !isset($this->config['profiles'][$profile])) {
+            Partyline::warn("[!] Profile '{$profile}' is not defined in the config file");
+        }
+
+        return $this;
     }
 
     public function bindGlide()
@@ -168,27 +178,44 @@ class Generator
         return $this;
     }
 
+
     protected function pages()
     {
         return collect()
             ->merge($this->content())
             ->values()
             ->reject(function ($page) {
-                if ($this->profile !== 'default') return true;
-
-                foreach ($this->config['exclude'] as $url) {
-                    if (Str::endsWith($url, '*')) {
-                        if (Str::is($url, $page->url())) return true;
+                if ($this->profile === 'default') {
+                    foreach ($this->config['exclude'] as $url) {
+                        if (Str::endsWith($url, '*')) {
+                            if (Str::is($url, $page->url())) return true;
+                        }
                     }
+
+                    return in_array($page->url(), $this->config['exclude']);
                 }
 
-                return in_array($page->url(), $this->config['exclude']);
+                return false;
+            })
+            ->filter(function ($page) {
+                if ($this->profile !== 'default' && !empty($this->profileUrls())) {
+                    foreach ($this->profileUrls() as $url) {
+                        if (Str::endsWith($url, '*')) {
+                            return Str::is($url, $page->url());
+                        }
+                    }
+
+                    return in_array($page->url(), $this->profileUrls());
+                }
+
+                return true;
             })
             ->merge($this->urls())
             ->sortBy(function ($page) {
                 return str_replace('/', '', $page->url());
             });
-    }
+      }
+
 
     protected function content()
     {
@@ -199,15 +226,15 @@ class Generator
 
     protected function urls()
     {
-      $urls = array_merge(
-          $this->config['urls'] ?? [],
-          $this->config['profiles'][$this->profile] ?? [],
-      );
+        return collect($this->config['urls'] ?? [])->map(function ($url) {
+            $url = Str::start($url, '/');
+            return $this->createPage(new Route($url));
+        });
+    }
 
-      return collect(array_unique($urls))->map(function ($url) {
-          $url = Str::start($url, '/');
-          return $this->createPage(new Route($url));
-      });
+    protected function profileUrls()
+    {
+        return ($this->config['profiles'][$this->profile] ?? []);
     }
 
     protected function createPage($content)
