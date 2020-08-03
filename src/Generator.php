@@ -172,6 +172,12 @@ class Generator
             ->merge($this->content())
             ->values()
             ->reject(function ($page) {
+                foreach ($this->config['exclude'] as $url) {
+                    if (Str::endsWith($url, '*')) {
+                        if (Str::is($url, $page->url())) return true;
+                    }
+                }
+
                 return in_array($page->url(), $this->config['exclude']);
             })->sortBy(function ($page) {
                 return str_replace('/', '', $page->url());

@@ -19,7 +19,7 @@ Install the package using Composer:
 composer require statamic/ssg
 ```
 
-If you want or need to customize the way the site is generated, you can do so by publishing and modifying the config file with the following command: 
+If you want or need to customize the way the site is generated, you can do so by publishing and modifying the config file with the following command:
 
 ```
 php artisan vendor:publish --provider="Statamic\StaticSite\ServiceProvider"
@@ -50,6 +50,14 @@ Routes will not automatically be generated. You can add any additional URLs you 
 ],
 ```
 
+You can also exclude single routes, or route groups with wildcards. This will override anything in the `urls` config.
+
+``` php
+'exclude' => [
+    '/secret-page',
+    '/cheat-codes/*',
+],
+```
 
 ## Post-generation callback
 
