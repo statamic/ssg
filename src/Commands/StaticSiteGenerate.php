@@ -21,7 +21,7 @@ class StaticSiteGenerate extends Command
      *
      * @var string
      */
-    protected $signature = 'statamic:ssg:generate';
+    protected $signature = 'statamic:ssg:generate {--recent} {--since=}';
 
     /**
      * The console command description.
@@ -51,6 +51,9 @@ class StaticSiteGenerate extends Command
     {
         Partyline::bind($this);
 
-        $this->generator->generate();
+        $recent = $this->option('recent');
+        $since = $this->option('since');
+
+        $this->generator->generate($recent, $since);
     }
 }

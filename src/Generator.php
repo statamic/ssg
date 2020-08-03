@@ -22,6 +22,8 @@ class Generator
     protected $files;
     protected $config;
     protected $request;
+    protected $recent;
+    protected $since;
     protected $after;
     protected $count = 0;
     protected $skips = 0;
@@ -42,11 +44,12 @@ class Generator
         return $this;
     }
 
-    public function generate()
+    public function generate($recent, $since)
     {
         Site::setCurrent(Site::default()->handle());
 
         $this
+            ->setRecent($recent, $since)
             ->bindGlide()
             ->backupViewPaths()
             ->clearDirectory()
@@ -67,6 +70,20 @@ class Generator
         if ($this->after) {
             call_user_func($this->after);
         }
+    }
+
+    public function setRecent($recent, $since)
+    {
+        $this->recent = $recent;
+
+        if ($recent) {
+            $diff = ($since === null) ? '24 hours' : $since;
+            Partyline::info("Generating collections updated in the last $diff");
+
+            $this->since = now()->sub($diff)->unix();
+        }
+
+        return $this;
     }
 
     public function bindGlide()
@@ -168,8 +185,8 @@ class Generator
     protected function pages()
     {
         return collect()
-            ->merge($this->urls())
             ->merge($this->content())
+            ->merge($this->urls())
             ->values()
             ->reject(function ($page) {
                 return in_array($page->url(), $this->config['exclude']);
@@ -182,7 +199,9 @@ class Generator
     {
         return Entry::all()->map(function ($content) {
             return $this->createPage($content);
-        })->filter->isGeneratable();
+        })
+        ->filter->isGeneratable()
+        ->filter->isRecent($this->recent, $this->since);
     }
 
     protected function urls()

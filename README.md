@@ -19,7 +19,7 @@ Install the package using Composer:
 composer require statamic/ssg
 ```
 
-If you want or need to customize the way the site is generated, you can do so by publishing and modifying the config file with the following command: 
+If you want or need to customize the way the site is generated, you can do so by publishing and modifying the config file with the following command:
 
 ```
 php artisan vendor:publish --provider="Statamic\StaticSite\ServiceProvider"
@@ -38,6 +38,16 @@ php please ssg:generate
 
 Your site will be generated into a directory which you can deploy however you like. See [Deployment Examples](#deployment-examples) below for inspiration.
 
+### Generate recent content
+
+You may wish to sync only new content instead of generating the entire static site. You may use a `--recent` argument which generates collection content that's been updated in the last 24 hours. This only applies to new collection content and all Statamic pages will still be generated.
+
+```
+php please ssg:generate --recent
+php please ssg:generate --recent --since="1 month"
+```
+
+You may also use any additional time option `--since` if you want to use a custom time window.
 
 ## Routes
 

@@ -25,6 +25,14 @@ class Page
         return $this->content->published();
     }
 
+    public function isRecent($recent, $since)
+    {
+        if (!$recent) return true;
+        if ($this->collection() === 'pages') return true;
+
+        return $this->content->updated_at > $since;
+    }
+
     public function generate($request)
     {
         try {
@@ -52,6 +60,11 @@ class Page
         $this->files->put($this->path(), $html);
 
         return new GeneratedPage($this, $response);
+    }
+
+    public function collection()
+    {
+        return $this->content->collectionHandle();
     }
 
     public function directory()
