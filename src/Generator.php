@@ -6,6 +6,7 @@ use Statamic\Facades\URL;
 use Statamic\Support\Str;
 use Statamic\Facades\Site;
 use Illuminate\Support\Arr;
+use Statamic\Facades\Collection;
 use Statamic\Facades\Entry;
 use Statamic\Facades\Term;
 use League\Flysystem\Adapter\Local;
@@ -172,6 +173,7 @@ class Generator
             ->merge($this->urls())
             ->merge($this->entries())
             ->merge($this->terms())
+            ->merge($this->scopedTerms())
             ->values()
             ->reject(function ($page) {
                 return in_array($page->url(), $this->config['exclude']);
@@ -192,6 +194,30 @@ class Generator
         return Term::all()->map(function ($content) {
             return $this->createPage($content);
         })->filter->isGeneratable();
+    }
+
+    protected function scopedTerms()
+    {
+        return Collection::all()
+            ->flatMap(function ($collection) {
+                return $this->getCollectionTerms($collection);
+            })
+            ->map(function ($content) {
+                return $this->createPage($content);
+            })
+            ->filter
+            ->isGeneratable();
+    }
+
+    public function getCollectionTerms($collection)
+    {
+        return $collection
+            ->taxonomies()
+            ->flatMap(function ($taxonomy) {
+                return $taxonomy->queryTerms()->get();
+            })
+            ->map
+            ->collection($collection);
     }
 
     protected function urls()
