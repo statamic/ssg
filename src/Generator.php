@@ -209,7 +209,7 @@ class Generator
             ->isGeneratable();
     }
 
-    public function getCollectionTerms($collection)
+    protected function getCollectionTerms($collection)
     {
         return $collection
             ->taxonomies()
