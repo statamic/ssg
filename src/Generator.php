@@ -7,6 +7,7 @@ use Statamic\Support\Str;
 use Statamic\Facades\Site;
 use Illuminate\Support\Arr;
 use Statamic\Facades\Entry;
+use Statamic\Facades\Term;
 use League\Flysystem\Adapter\Local;
 use Statamic\Imaging\ImageGenerator;
 use Illuminate\Filesystem\Filesystem;
@@ -169,7 +170,8 @@ class Generator
     {
         return collect()
             ->merge($this->urls())
-            ->merge($this->content())
+            ->merge($this->entries())
+            ->merge($this->terms())
             ->values()
             ->reject(function ($page) {
                 return in_array($page->url(), $this->config['exclude']);
@@ -178,9 +180,16 @@ class Generator
             });
     }
 
-    protected function content()
+    protected function entries()
     {
         return Entry::all()->map(function ($content) {
+            return $this->createPage($content);
+        })->filter->isGeneratable();
+    }
+
+    protected function terms()
+    {
+        return Term::all()->map(function ($content) {
             return $this->createPage($content);
         })->filter->isGeneratable();
     }
