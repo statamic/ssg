@@ -81,7 +81,7 @@ Deployments are triggered by committing to Git and pushing to GitHub.
 - Link the site to your desired GitHub repository
 - Add build command `php please ssg:generate`
 - Set publish directory `storage/app/static`
-- Add environment variable: `PHP_VERSION` `7.2`
+- Add environment variable: `PHP_VERSION` `7.4`
 
 After your site has an APP_URL...
 
