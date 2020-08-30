@@ -184,9 +184,15 @@ class Generator
 
     protected function entries()
     {
-        return Entry::all()->map(function ($content) {
-            return $this->createPage($content);
-        })->filter->isGeneratable();
+        return Entry::all()
+            ->reject(function ($entry) {
+                return is_null($entry->uri());
+            })
+            ->map(function ($content) {
+                return $this->createPage($content);
+            })
+            ->filter
+            ->isGeneratable();
     }
 
     protected function terms()
