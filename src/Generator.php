@@ -6,7 +6,9 @@ use Statamic\Facades\URL;
 use Statamic\Support\Str;
 use Statamic\Facades\Site;
 use Illuminate\Support\Arr;
+use Statamic\Facades\Collection;
 use Statamic\Facades\Entry;
+use Statamic\Facades\Term;
 use League\Flysystem\Adapter\Local;
 use Statamic\Imaging\ImageGenerator;
 use Illuminate\Filesystem\Filesystem;
@@ -169,7 +171,9 @@ class Generator
     {
         return collect()
             ->merge($this->urls())
-            ->merge($this->content())
+            ->merge($this->entries())
+            ->merge($this->terms())
+            ->merge($this->scopedTerms())
             ->values()
             ->reject(function ($page) {
                 foreach ($this->config['exclude'] as $url) {
@@ -184,11 +188,42 @@ class Generator
             });
     }
 
-    protected function content()
+    protected function entries()
     {
         return Entry::all()->map(function ($content) {
             return $this->createPage($content);
         })->filter->isGeneratable();
+    }
+
+    protected function terms()
+    {
+        return Term::all()->map(function ($content) {
+            return $this->createPage($content);
+        })->filter->isGeneratable();
+    }
+
+    protected function scopedTerms()
+    {
+        return Collection::all()
+            ->flatMap(function ($collection) {
+                return $this->getCollectionTerms($collection);
+            })
+            ->map(function ($content) {
+                return $this->createPage($content);
+            })
+            ->filter
+            ->isGeneratable();
+    }
+
+    protected function getCollectionTerms($collection)
+    {
+        return $collection
+            ->taxonomies()
+            ->flatMap(function ($taxonomy) {
+                return $taxonomy->queryTerms()->get();
+            })
+            ->map
+            ->collection($collection);
     }
 
     protected function urls()
