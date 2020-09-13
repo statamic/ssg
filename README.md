@@ -91,11 +91,15 @@ Deployments are triggered by committing to Git and pushing to GitHub.
 - Link the site to your desired GitHub repository
 - Add build command `php please ssg:generate`
 - Set publish directory `storage/app/static`
-- Add environment variable: `PHP_VERSION` `7.2`
+- Add environment variable: `PHP_VERSION` `7.4`
 
 After your site has an APP_URL...
 
 - Set it as an environment variable. Add `APP_URL` `https://thats-numberwang-47392.netlify.com`
+
+Finally, generate an `APP_KEY` to your .env file locally using `php artisan key:generate` and copy it's value, then...
+
+- Set it as an environment variable. Add `APP_KEY` `[your app key value]`
 
 #### S3 Asset Containers
 
@@ -162,6 +166,9 @@ rm composer-setup.php
 
 # INSTALL COMPOSER DEPENDENCIES
 php composer.phar install
+
+# GENERATE APP KEY
+php artisan key:generate
 
 # BUILD STATIC SITE
 php please ssg:generate
