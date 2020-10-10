@@ -127,7 +127,7 @@ Deployments are triggered by committing to Git and pushing to GitHub.
 - Add build command `./build.sh`
 - Set output directory to `storage/app/static`
 - Add environment variable in your project settings: `APP_KEY` `<copy & paste from dev>`
-- Create the following `build.sh` file to install PHP, Composer, and run the `ssh:generate` command:
+- Create the following `build.sh` file to install PHP, Composer, and run the `ssg:generate` command:
 
 ```
 #!/bin/sh
