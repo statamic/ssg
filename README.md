@@ -71,7 +71,7 @@ class AppServiceProvider extends Provider
 
 ## Deployment Examples
 
-These examples assumes your workflow will be to author content **locally** and _not_ using the control panel in production.
+These examples assume your workflow will be to author content **locally** and _not_ using the control panel in production.
 
 ### Deploy to [Netlify](https://netlify.com)
 
