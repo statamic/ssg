@@ -193,6 +193,12 @@ class Generator
             ->merge($this->urls())
             ->values()
             ->reject(function ($page) {
+                foreach ($this->config['exclude'] as $url) {
+                    if (Str::endsWith($url, '*')) {
+                        if (Str::is($url, $page->url())) return true;
+                    }
+                }
+
                 return in_array($page->url(), $this->config['exclude']);
             })->sortBy(function ($page) {
                 return str_replace('/', '', $page->url());
@@ -201,11 +207,15 @@ class Generator
 
     protected function entries()
     {
-        return Entry::all()->map(function ($content) {
-            return $this->createPage($content);
-        })
-        ->filter->isGeneratable()
-        ->filter->isRecent($this->recent, $this->since);
+        return Entry::all()
+            ->reject(function ($entry) {
+                return is_null($entry->uri());
+            })
+            ->map(function ($content) {
+                return $this->createPage($content);
+            })
+            ->filter->isGeneratable()
+            ->filter->isRecent($this->recent, $this->since);
     }
 
     protected function terms()
