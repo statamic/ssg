@@ -71,7 +71,7 @@ class AppServiceProvider extends Provider
 
 ## Deployment Examples
 
-These examples assumes your workflow will be to author content **locally** and _not_ using the control panel in production.
+These examples assume your workflow will be to author content **locally** and _not_ using the control panel in production.
 
 ### Deploy to [Netlify](https://netlify.com)
 
@@ -122,12 +122,16 @@ Be sure to also update these in your `s3` disk configuration:
 
 Deployments are triggered by committing to Git and pushing to GitHub.
 
+- Create a new file called `./build.sh` and paste the code snippet below.
+- Run `chmod +x build.sh` on your terminal to make sure the file can be executed when deploying.
 - Import a new site in your [Vercel](https://vercel.com) account
 - Link the site to your desired GitHub repository
 - Add build command `./build.sh`
 - Set output directory to `storage/app/static`
 - Add environment variable in your project settings: `APP_KEY` `<copy & paste from dev>`
-- Create the following `build.sh` file to install PHP, Composer, and run the `ssg:generate` command:
+
+#### Code for build.sh
+Add the following snippet to `build.sh` file to install PHP, Composer, and run the `ssg:generate` command:
 
 ```
 #!/bin/sh
