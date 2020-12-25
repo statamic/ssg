@@ -19,7 +19,7 @@ Install the package using Composer:
 composer require statamic/ssg
 ```
 
-If you want or need to customize the way the site is generated, you can do so by publishing and modifying the config file with the following command: 
+If you want or need to customize the way the site is generated, you can do so by publishing and modifying the config file with the following command:
 
 ```
 php artisan vendor:publish --provider="Statamic\StaticSite\ServiceProvider"
@@ -50,6 +50,26 @@ Routes will not automatically be generated. You can add any additional URLs you 
 ],
 ```
 
+## Pre-generation callback
+
+If you want to executed code before generating the static site: to run commands that modify the config files for example.
+
+``` php
+use Statamic\StaticSite\Generator;
+use Statamic\Facades\Config;
+
+class AppServiceProvider extends Provider
+{
+    public function boot()
+    {
+        Generator::before(function () {
+            // eg. dynamically create custom pages for a collection
+            // $urls = Config::get('statamic.ssg.urls');
+            // Config::set('statamic.ssg.urls', array_merge($urls, $custom));
+        });
+    }
+}
+```
 
 ## Post-generation callback
 
