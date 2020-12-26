@@ -187,10 +187,10 @@ class Generator
     protected function pages()
     {
         return collect()
+            ->merge($this->urls())
             ->merge($this->entries())
             ->merge($this->terms())
             ->merge($this->scopedTerms())
-            ->merge($this->urls())
             ->values()
             ->reject(function ($page) {
                 foreach ($this->config['exclude'] as $url) {
