@@ -3,6 +3,7 @@
 namespace Statamic\StaticSite;
 
 use Illuminate\Contracts\Http\Kernel;
+use Statamic\Facades\Site;
 
 class Route
 {
@@ -16,6 +17,11 @@ class Route
     public function url()
     {
         return $this->url;
+    }
+
+    public function site()
+    {
+        return Site::findByUrl($this->url());
     }
 
     public function toResponse($request)

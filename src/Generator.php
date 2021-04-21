@@ -2,6 +2,7 @@
 
 namespace Statamic\StaticSite;
 
+use Facades\Statamic\View\Cascade;
 use Statamic\Facades\URL;
 use Statamic\Support\Str;
 use Statamic\Facades\Site;
@@ -141,6 +142,8 @@ class Generator
         });
 
         $this->pages()->each(function ($page) use ($request) {
+            $this->updateCurrentSite($page->site());
+
             view()->getFinder()->setPaths($this->viewPaths);
 
             $this->count++;
@@ -235,7 +238,7 @@ class Generator
     protected function urls()
     {
         return collect($this->config['urls'] ?? [])->map(function ($url) {
-            $url = Str::start($url, '/');
+            $url = URL::tidy(Str::start($url, $this->config['base_url'].'/'));
             return $this->createPage(new Route($url));
         });
     }
@@ -243,5 +246,16 @@ class Generator
     protected function createPage($content)
     {
         return new Page($this->files, $this->config, $content);
+    }
+
+    protected function updateCurrentSite($site)
+    {
+        Site::setCurrent($site->handle());
+        Cascade::withSite($site);
+
+        // Set the locale for dates, carbon, and for the translator.
+        // This is what happens in Statamic's Localize middleware.
+        setlocale(LC_TIME, $site->locale());
+        app()->setLocale($site->shortLocale());
     }
 }
