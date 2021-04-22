@@ -6,6 +6,7 @@ use Facades\Statamic\View\Cascade;
 use Statamic\Facades\URL;
 use Statamic\Support\Str;
 use Statamic\Facades\Site;
+use Illuminate\Routing\Router;
 use Illuminate\Support\Arr;
 use Statamic\Facades\Collection;
 use Statamic\Facades\Entry;
@@ -18,11 +19,13 @@ use Statamic\Contracts\Imaging\UrlBuilder;
 use League\Flysystem\Filesystem as Flysystem;
 use Wilderborn\Partyline\Facade as Partyline;
 use Illuminate\Contracts\Foundation\Application;
+use Statamic\Http\Controllers\FrontendController;
 
 class Generator
 {
     protected $app;
     protected $files;
+    protected $router;
     protected $config;
     protected $request;
     protected $after;
@@ -31,10 +34,11 @@ class Generator
     protected $warnings = 0;
     protected $viewPaths;
 
-    public function __construct(Application $app, Filesystem $files)
+    public function __construct(Application $app, Filesystem $files, Router $router)
     {
         $this->app = $app;
         $this->files = $files;
+        $this->router = $router;
         $this->config = config('statamic.ssg');
     }
 
@@ -173,6 +177,7 @@ class Generator
     protected function pages()
     {
         return collect()
+            ->merge($this->routes())
             ->merge($this->urls())
             ->merge($this->entries())
             ->merge($this->terms())
@@ -239,6 +244,25 @@ class Generator
     {
         return collect($this->config['urls'] ?? [])->map(function ($url) {
             $url = URL::tidy(Str::start($url, $this->config['base_url'].'/'));
+            return $this->createPage(new Route($url));
+        });
+    }
+
+    protected function routes()
+    {
+        $routes = $this->router->getRoutes();
+
+        $action = FrontendController::class.'@route';
+
+        if (! $routes->getByAction($action)) {
+            return collect();
+        }
+
+        return collect($routes->getRoutes())->filter(function ($route) use ($action) {
+            return $route->getActionName() === $action
+                && ! Str::contains($route->uri(), '{');
+        })->map(function ($route) {
+            $url = URL::tidy(Str::start($route->uri(), $this->config['base_url'].'/'));
             return $this->createPage(new Route($url));
         });
     }
