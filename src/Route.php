@@ -20,6 +20,11 @@ class Route
         return URL::makeRelative($this->url);
     }
 
+    public function urlWithoutRedirect()
+    {
+        return $this->url();
+    }
+
     public function site()
     {
         return Site::findByUrl($this->url);
