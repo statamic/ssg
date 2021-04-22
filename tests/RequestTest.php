@@ -12,14 +12,14 @@ use Statamic\StaticSite\Request;
 class RequestTest extends TestCase
 {
     /** @test */
-    function gets_scheme()
+    public function gets_scheme()
     {
         $this->assertEquals('http', (new Request)->setConfig(['base_url' => 'http://test.com'])->getScheme());
         $this->assertEquals('https', (new Request)->setConfig(['base_url' => 'https://test.com'])->getScheme());
     }
 
     /** @test */
-    function gets_http_host()
+    public function gets_http_host()
     {
         $this->assertEquals('test.com', (new Request)->setConfig(['base_url' => 'http://test.com'])->getHttpHost());
         $this->assertEquals('test.com', (new Request)->setConfig(['base_url' => 'http://test.com/'])->getHttpHost());
@@ -28,7 +28,7 @@ class RequestTest extends TestCase
     }
 
     /** @test */
-    function gets_base_url()
+    public function gets_base_url()
     {
         $this->assertEquals('', (new Request)->setConfig(['base_url' => 'http://test.com'])->getBaseUrl());
         $this->assertEquals('', (new Request)->setConfig(['base_url' => 'http://test.com/'])->getBaseUrl());
@@ -37,13 +37,13 @@ class RequestTest extends TestCase
     }
 
     /** @test */
-    function gets_path()
+    public function gets_path()
     {
         // The current site needs to be explicitly set, otherwise it will try to
         // resolve it from the request, which will result in an infinite loop.
         Site::setCurrent(Site::default()->handle());
 
-        Collection::make('test')->route('{slug}')->save();
+        Collection::make('test')->routes('{slug}')->save();
         $entry = Entry::make()->slug('foo')->locale('default')->collection('test');
         $page = new Page(app('files'), [], $entry);
 
