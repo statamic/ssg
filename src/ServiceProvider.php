@@ -10,7 +10,7 @@ class ServiceProvider extends LaravelServiceProvider
     public function register()
     {
         $this->app->singleton(Generator::class, function ($app) {
-            return new Generator($app, $app['files']);
+            return new Generator($app, $app['files'], $app['router']);
         });
     }
 
