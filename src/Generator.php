@@ -40,8 +40,19 @@ class Generator
         $this->app = $app;
         $this->files = $files;
         $this->router = $router;
-        $this->config = config('statamic.ssg');
         $this->extraUrls = collect();
+        $this->config = $this->initializeConfig();
+    }
+
+    private function initializeConfig()
+    {
+        $config = config('statamic.ssg');
+
+        if (Str::startsWith($config['base_url'], '/')) {
+            $config['base_url'] = 'http://localhost'.$config['base_url'];
+        }
+
+        return $config;
     }
 
     public function after($after)
