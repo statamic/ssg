@@ -59,18 +59,37 @@ You can also exclude single routes, or route groups with wildcards. This will ov
 ],
 ```
 
-## Post-generation callback
+### Dynamically adding routes
 
-You may optionally define extra steps to be executed after the site has been generated.
+You may add URLs dynamically by providing a closure that returns an array to the `addUrls` method.
 
-``` php
-use Statamic\StaticSite\Generator;
+```php
+use Statamic\StaticSite\SSG;
 
 class AppServiceProvider extends Provider
 {
     public function boot()
     {
-        Generator::after(function () {
+        SSG::addUrls(function () {
+            return ['/one', '/two'];
+        });
+    }
+}
+```
+
+
+## Post-generation callback
+
+You may optionally define extra steps to be executed after the site has been generated.
+
+``` php
+use Statamic\StaticSite\SSG;
+
+class AppServiceProvider extends Provider
+{
+    public function boot()
+    {
+        SSG::after(function () {
             // eg. copy directory to some server
         });
     }

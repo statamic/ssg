@@ -33,6 +33,7 @@ class Generator
     protected $skips = 0;
     protected $warnings = 0;
     protected $viewPaths;
+    protected $extraUrls;
 
     public function __construct(Application $app, Filesystem $files, Router $router)
     {
@@ -40,6 +41,7 @@ class Generator
         $this->files = $files;
         $this->router = $router;
         $this->config = config('statamic.ssg');
+        $this->extraUrls = collect();
     }
 
     public function after($after)
@@ -47,6 +49,11 @@ class Generator
         $this->after = $after;
 
         return $this;
+    }
+
+    public function addUrls($closure)
+    {
+        $this->extraUrls[] = $closure;
     }
 
     public function generate()
@@ -243,7 +250,11 @@ class Generator
 
     protected function urls()
     {
-        return collect($this->config['urls'] ?? [])->map(function ($url) {
+        $extra = $this->extraUrls->flatMap(function ($closure) {
+            return $closure();
+        });
+
+        return collect($this->config['urls'] ?? [])->merge($extra)->map(function ($url) {
             $url = URL::tidy(Str::start($url, $this->config['base_url'].'/'));
             return $this->createPage(new Route($url));
         });
