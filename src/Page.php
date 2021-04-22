@@ -70,7 +70,7 @@ class Page
 
     public function url()
     {
-        return $this->content->url();
+        return $this->content->urlWithoutRedirect();
     }
 
     public function site()
