@@ -64,13 +64,13 @@ You can also exclude single routes, or route groups with wildcards. This will ov
 You may optionally define extra steps to be executed after the site has been generated.
 
 ``` php
-use Statamic\StaticSite\Generator;
+use Statamic\StaticSite\SSG;
 
 class AppServiceProvider extends Provider
 {
     public function boot()
     {
-        Generator::after(function () {
+        SSG::after(function () {
             // eg. copy directory to some server
         });
     }
