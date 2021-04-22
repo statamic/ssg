@@ -251,16 +251,8 @@ class Generator
 
     protected function routes()
     {
-        $routes = $this->router->getRoutes();
-
-        $action = FrontendController::class.'@route';
-
-        if (! $routes->getByAction($action)) {
-            return collect();
-        }
-
-        return collect($routes->getRoutes())->filter(function ($route) use ($action) {
-            return $route->getActionName() === $action
+        return collect($this->router->getRoutes()->getRoutes())->filter(function ($route) {
+            return $route->getActionName() === FrontendController::class.'@route'
                 && ! Str::contains($route->uri(), '{');
         })->map(function ($route) {
             $url = URL::tidy(Str::start($route->uri(), $this->config['base_url'].'/'));
