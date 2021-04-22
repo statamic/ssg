@@ -45,7 +45,7 @@ class Page
 
         $html = $response->getContent();
 
-        if (! $this->files->exists($this->directory())) {
+        if (! $this->is404() && ! $this->files->exists($this->directory())) {
             $this->files->makeDirectory($this->directory(), 0755, true);
         }
 
@@ -61,6 +61,10 @@ class Page
 
     public function path()
     {
+        if ($this->is404()) {
+            return $this->config['destination'] . '/404.html';
+        }
+
         return $this->directory()  . '/index.html';
     }
 
@@ -72,5 +76,10 @@ class Page
     public function site()
     {
         return $this->content->site();
+    }
+
+    public function is404()
+    {
+        return $this->url() === '/404';
     }
 }
