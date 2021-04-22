@@ -32,6 +32,10 @@ class Route
         $kernel->terminate($request, $response);
 
         if ($e = $response->exception) {
+            if ($response->status() === 404 && $this->url() === '/404') {
+                return $response;
+            }
+
             throw $e;
         }
 

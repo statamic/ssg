@@ -254,6 +254,10 @@ class Generator
             return $closure();
         });
 
+        if (view()->exists('errors.404')) {
+            $extra[] = '/404';
+        }
+
         return collect($this->config['urls'] ?? [])->merge($extra)->map(function ($url) {
             $url = URL::tidy(Str::start($url, $this->config['base_url'].'/'));
             return $this->createPage(new Route($url));
