@@ -68,4 +68,9 @@ class Page
     {
         return $this->content->url();
     }
+
+    public function site()
+    {
+        return $this->content->site();
+    }
 }
