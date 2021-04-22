@@ -183,6 +183,7 @@ class Generator
             ->merge($this->terms())
             ->merge($this->scopedTerms())
             ->values()
+            ->unique->url()
             ->reject(function ($page) {
                 foreach ($this->config['exclude'] as $url) {
                     if (Str::endsWith($url, '*')) {
