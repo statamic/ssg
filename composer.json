@@ -24,7 +24,8 @@
         }
     },
     "require": {
-        "statamic/cms": "~3.1.7"
+        "statamic/cms": "~3.1.7",
+        "spatie/fork": "^0.0.4"
     },
     "require-dev": {
         "orchestra/testbench": "^4.0"
