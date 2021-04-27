@@ -21,7 +21,7 @@ class StaticSiteGenerate extends Command
      *
      * @var string
      */
-    protected $signature = 'statamic:ssg:generate';
+    protected $signature = 'statamic:ssg:generate {--workers=1}';
 
     /**
      * The console command description.
@@ -51,6 +51,8 @@ class StaticSiteGenerate extends Command
     {
         Partyline::bind($this);
 
-        $this->generator->generate();
+        $this->generator
+            ->workers($this->option('workers'))
+            ->generate();
     }
 }

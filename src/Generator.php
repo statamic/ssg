@@ -35,6 +35,7 @@ class Generator
     protected $warnings = 0;
     protected $viewPaths;
     protected $extraUrls;
+    protected $workers = 1;
 
     public function __construct(Application $app, Filesystem $files, Router $router)
     {
@@ -54,6 +55,13 @@ class Generator
         }
 
         return $config;
+    }
+
+    public function workers(int $workers)
+    {
+        $this->workers = $workers;
+
+        return $this;
     }
 
     public function after($after)
@@ -213,9 +221,7 @@ class Generator
 
     protected function makeContentGenerationClosures($pages, $request)
     {
-        $processes = 1;
-
-        return $pages->split($processes)->map(function ($pages) use ($request) {
+        return $pages->split($this->workers)->map(function ($pages) use ($request) {
             return function () use ($pages, $request) {
                 $count = $skips = $warnings = 0;
                 $errors = [];
