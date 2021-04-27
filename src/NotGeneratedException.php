@@ -43,6 +43,6 @@ class NotGeneratedException extends \Exception
                 $message = $this->getMessage();
         }
 
-        return sprintf('%s %s (%s)', "\x1B[1A\x1B[2K<fg=red>[✘]</>", $this->getPage()->url(), $message);
+        return sprintf('%s %s (%s)', "<fg=red>[✘]</>", $this->getPage()->url(), $message);
     }
 }
