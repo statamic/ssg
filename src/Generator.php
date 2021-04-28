@@ -27,6 +27,7 @@ class Generator
     protected $app;
     protected $files;
     protected $router;
+    protected $tasks;
     protected $config;
     protected $request;
     protected $after;
@@ -37,11 +38,12 @@ class Generator
     protected $extraUrls;
     protected $workers = 1;
 
-    public function __construct(Application $app, Filesystem $files, Router $router)
+    public function __construct(Application $app, Filesystem $files, Router $router, Tasks $tasks)
     {
         $this->app = $app;
         $this->files = $files;
         $this->router = $router;
+        $this->tasks = $tasks;
         $this->extraUrls = collect();
         $this->config = $this->initializeConfig();
     }
@@ -78,6 +80,8 @@ class Generator
 
     public function generate()
     {
+        $this->checkConcurrencySupport();
+
         Site::setCurrent(Site::default()->handle());
 
         $this
@@ -178,7 +182,7 @@ class Generator
 
         $closures = $this->makeContentGenerationClosures($pages, $request);
 
-        $results = Fork::new()->run(...$closures);
+        $results = $this->tasks->run(...$closures);
 
         $this->outputResults($results);
 
@@ -252,7 +256,7 @@ class Generator
 
                 return compact('count', 'skips', 'warnings', 'errors');
             };
-        });
+        })->all();
     }
 
     protected function outputResults($results)
@@ -355,5 +359,14 @@ class Generator
         // This is what happens in Statamic's Localize middleware.
         setlocale(LC_TIME, $site->locale());
         app()->setLocale($site->shortLocale());
+    }
+
+    protected function checkConcurrencySupport()
+    {
+        if ($this->workers === 1 || class_exists(Fork::class)) {
+            return;
+        }
+
+        throw new \RuntimeException('To use multiple workers, you must install PHP 8 and spatie/fork.');
     }
 }
