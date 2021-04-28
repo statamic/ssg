@@ -2,6 +2,7 @@
 
 namespace Statamic\StaticSite;
 
+use Spatie\Fork\Fork;
 use Facades\Statamic\View\Cascade;
 use Statamic\Facades\URL;
 use Statamic\Support\Str;
@@ -26,6 +27,7 @@ class Generator
     protected $app;
     protected $files;
     protected $router;
+    protected $tasks;
     protected $config;
     protected $request;
     protected $after;
@@ -34,12 +36,14 @@ class Generator
     protected $warnings = 0;
     protected $viewPaths;
     protected $extraUrls;
+    protected $workers = 1;
 
-    public function __construct(Application $app, Filesystem $files, Router $router)
+    public function __construct(Application $app, Filesystem $files, Router $router, Tasks $tasks)
     {
         $this->app = $app;
         $this->files = $files;
         $this->router = $router;
+        $this->tasks = $tasks;
         $this->extraUrls = collect();
         $this->config = $this->initializeConfig();
     }
@@ -53,6 +57,13 @@ class Generator
         }
 
         return $config;
+    }
+
+    public function workers(int $workers)
+    {
+        $this->workers = $workers;
+
+        return $this;
     }
 
     public function after($after)
@@ -69,6 +80,8 @@ class Generator
 
     public function generate()
     {
+        $this->checkConcurrencySupport();
+
         Site::setCurrent(Site::default()->handle());
 
         $this
@@ -134,7 +147,7 @@ class Generator
                 Partyline::line("Symlink not created. $dest already exists.");
             } else {
                 $this->files->link($source, $dest);
-                Partyline::line("$source symlinked to $dest");
+                Partyline::line("<info>[✔]</info> $source symlinked to $dest");
             }
         }
 
@@ -152,7 +165,7 @@ class Generator
                 $this->files->copyDirectory($source, $dest);
             }
 
-            Partyline::line("$source copied to to $dest");
+            Partyline::line("<info>[✔]</info> $source copied to $dest");
         }
     }
 
@@ -163,33 +176,28 @@ class Generator
             $this->app->instance('request', $request);
         });
 
-        $this->pages()->each(function ($page) use ($request) {
-            $this->updateCurrentSite($page->site());
+        $pages = $this->gatherContent();
 
-            view()->getFinder()->setPaths($this->viewPaths);
+        Partyline::line("Generating {$pages->count()} content files...");
 
-            $this->count++;
+        $closures = $this->makeContentGenerationClosures($pages, $request);
 
-            $request->setPage($page);
+        $results = $this->tasks->run(...$closures);
 
-            Partyline::comment("Generating {$page->url()}...");
-
-            try {
-                $generated = $page->generate($request);
-            } catch (NotGeneratedException $e) {
-                $this->skips++;
-                Partyline::line($e->consoleMessage());
-                return;
-            }
-
-            if ($generated->hasWarning()) {
-                $this->warnings++;
-            }
-
-            Partyline::line($generated->consoleMessage());
-        });
+        $this->outputResults($results);
 
         return $this;
+    }
+
+    protected function gatherContent()
+    {
+        Partyline::line('Gathering content to be generated...');
+
+        $pages = $this->pages();
+
+        Partyline::line("\x1B[1A\x1B[2K<info>[✔]</info> Gathered content to be generated");
+
+        return $pages;
     }
 
     protected function pages()
@@ -213,6 +221,57 @@ class Generator
             })->sortBy(function ($page) {
                 return str_replace('/', '', $page->url());
             });
+    }
+
+    protected function makeContentGenerationClosures($pages, $request)
+    {
+        return $pages->split($this->workers)->map(function ($pages) use ($request) {
+            return function () use ($pages, $request) {
+                $count = $skips = $warnings = 0;
+                $errors = [];
+
+                foreach ($pages as $page) {
+                    $this->updateCurrentSite($page->site());
+
+                    view()->getFinder()->setPaths($this->viewPaths);
+
+                    $count++;
+
+                    $request->setPage($page);
+
+                    Partyline::line("\x1B[1A\x1B[2KGenerating ".$page->url());
+
+                    try {
+                        $generated = $page->generate($request);
+                    } catch (NotGeneratedException $e) {
+                        $skips++;
+                        $errors[] = $e->consoleMessage();
+                        continue;
+                    }
+
+                    if ($generated->hasWarning()) {
+                        $warnings++;
+                    }
+                }
+
+                return compact('count', 'skips', 'warnings', 'errors');
+            };
+        })->all();
+    }
+
+    protected function outputResults($results)
+    {
+        $results = collect($results);
+
+        Partyline::line("\x1B[1A\x1B[2K<info>[✔]</info> Generated {$results->sum('count')} content files");
+
+        if ($results->sum('skips')) {
+            $results->reduce(function ($carry, $item) {
+                return $carry->merge($item['errors']);
+            }, collect())->each(function ($error) {
+                Partyline::line($error);
+            });
+        }
     }
 
     protected function entries()
@@ -300,5 +359,14 @@ class Generator
         // This is what happens in Statamic's Localize middleware.
         setlocale(LC_TIME, $site->locale());
         app()->setLocale($site->shortLocale());
+    }
+
+    protected function checkConcurrencySupport()
+    {
+        if ($this->workers === 1 || class_exists(Fork::class)) {
+            return;
+        }
+
+        throw new \RuntimeException('To use multiple workers, you must install PHP 8 and spatie/fork.');
     }
 }
