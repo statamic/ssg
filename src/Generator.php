@@ -218,9 +218,7 @@ class Generator
                 }
 
                 return in_array($page->url(), $this->config['exclude']);
-            })->sortBy(function ($page) {
-                return str_replace('/', '', $page->url());
-            });
+            })->shuffle();
     }
 
     protected function makeContentGenerationClosures($pages, $request)
