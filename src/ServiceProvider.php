@@ -10,8 +10,8 @@ class ServiceProvider extends LaravelServiceProvider
 {
     public function register()
     {
-        $this->app->bind(Tasks::class, function () {
-            return class_exists(Fork::class)
+        $this->app->bind(Tasks::class, function ($app) {
+            return $app->runningInConsole() && class_exists(Fork::class)
                 ? new ConcurrentTasks(new Fork)
                 : new ConsecutiveTasks;
         });
