@@ -3,6 +3,8 @@
 namespace Statamic\StaticSite;
 
 use Illuminate\Contracts\Http\Kernel;
+use Statamic\Facades\Site;
+use Statamic\Facades\URL;
 
 class Route
 {
@@ -15,7 +17,17 @@ class Route
 
     public function url()
     {
-        return $this->url;
+        return URL::makeRelative($this->url);
+    }
+
+    public function urlWithoutRedirect()
+    {
+        return $this->url();
+    }
+
+    public function site()
+    {
+        return Site::findByUrl($this->url);
     }
 
     public function toResponse($request)
@@ -25,6 +37,10 @@ class Route
         $kernel->terminate($request, $response);
 
         if ($e = $response->exception) {
+            if ($response->status() === 404 && $this->url() === '/404') {
+                return $response;
+            }
+
             throw $e;
         }
 
