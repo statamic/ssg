@@ -6,11 +6,6 @@ Generate static sites with Statamic 3.
 
 
 
-## License
-
-No license is required during the Statamic 3 beta period.
-
-
 ## Installation
 
 Install the package using Composer:
