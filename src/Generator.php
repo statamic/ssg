@@ -184,6 +184,8 @@ class Generator
 
         $results = $this->tasks->run(...$closures);
 
+        $results = $this->processResults($results);
+        
         $this->outputResults($results);
 
         return $this;
@@ -257,13 +259,22 @@ class Generator
         })->all();
     }
 
-    protected function outputResults($results)
+    protected function processResults($results)
     {
         $results = collect($results);
 
-        Partyline::line("\x1B[1A\x1B[2K<info>[✔]</info> Generated {$results->sum('count')} content files");
+        $this->count = $results->sum('count');
+        $this->skips = $results->sum('skips');
+        $this->warnings = $results->sum('warnings');
 
-        if ($results->sum('skips')) {
+        return $results;
+    }
+
+    protected function outputResults($results)
+    {
+        Partyline::line("\x1B[1A\x1B[2K<info>[✔]</info> Generated {$this->count} content files");
+
+        if ($this->skips) {
             $results->reduce(function ($carry, $item) {
                 return $carry->merge($item['errors']);
             }, collect())->each(function ($error) {
