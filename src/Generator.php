@@ -37,6 +37,7 @@ class Generator
     protected $viewPaths;
     protected $extraUrls;
     protected $workers = 1;
+    protected $failsafe;
 
     public function __construct(Application $app, Filesystem $files, Router $router, Tasks $tasks)
     {
@@ -62,6 +63,13 @@ class Generator
     public function workers(int $workers)
     {
         $this->workers = $workers;
+
+        return $this;
+    }
+
+    public function failmode(bool $failsafe)
+    {
+        $this->failsafe = $failsafe;
 
         return $this;
     }
@@ -100,6 +108,11 @@ class Generator
 
         if ($this->warnings) {
             Partyline::warn("[!] {$this->warnings}/{$this->count} pages generated with warnings");
+        }
+
+        if ($this->failsafe && ($this->warnings || $this->skips)) {
+            Partyline::error('Failed to generate static site without errors.');
+            die();
         }
 
         if ($this->after) {
