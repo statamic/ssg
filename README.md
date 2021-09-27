@@ -110,9 +110,8 @@ Deployments are triggered by committing to Git and pushing to GitHub.
 
 - Create a site in your [Netlify](https://netlify.com) account
 - Link the site to your desired GitHub repository
-- Add build command `php please ssg:generate`
+- Add build command `php please ssg:generate` (if you need to compile css/js, be sure to add that command too. e.g. `php please ssg:generate && npm install && npm run prod`).
 - Set publish directory `storage/app/static`
-- Add environment variable: `PHP_VERSION` `7.4`
 
 After your site has an APP_URL...
 
