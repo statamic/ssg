@@ -100,6 +100,18 @@ class AppServiceProvider extends Provider
 }
 ```
 
+
+## Triggering Command Failures
+
+If you are using the SSG in a CI environment, you may want to prevent the command from succeeding if any pages aren't generated (e.g. to prevent deployment of an incomplete site).
+
+By default, the command will finish and exit with a success code even if there were un-generated pages. You can tell configure the SSG to fail early on errors, or even on warnings.
+
+```php
+'failures' => 'errors', // or 'warnings'
+```
+
+
 ## Deployment Examples
 
 These examples assume your workflow will be to author content **locally** and _not_ using the control panel in production.

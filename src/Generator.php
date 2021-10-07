@@ -31,12 +31,10 @@ class Generator
     protected $config;
     protected $request;
     protected $after;
-    protected $count = 0;
-    protected $skips = 0;
-    protected $warnings = 0;
     protected $viewPaths;
     protected $extraUrls;
     protected $workers = 1;
+    protected $taskResults;
 
     public function __construct(Application $app, Filesystem $files, Router $router, Tasks $tasks)
     {
@@ -90,17 +88,8 @@ class Generator
             ->clearDirectory()
             ->createContentFiles()
             ->createSymlinks()
-            ->copyFiles();
-
-        Partyline::info('Static site generated into ' . $this->config['destination']);
-
-        if ($this->skips) {
-            Partyline::warn("[!] {$this->skips}/{$this->count} pages not generated");
-        }
-
-        if ($this->warnings) {
-            Partyline::warn("[!] {$this->warnings}/{$this->count} pages generated with warnings");
-        }
+            ->copyFiles()
+            ->outputSummary();
 
         if ($this->after) {
             call_user_func($this->after);
@@ -167,6 +156,8 @@ class Generator
 
             Partyline::line("<info>[✔]</info> $source copied to $dest");
         }
+
+        return $this;
     }
 
     protected function createContentFiles()
@@ -184,9 +175,31 @@ class Generator
 
         $results = $this->tasks->run(...$closures);
 
-        $this->outputResults($results);
+        if ($this->anyTasksFailed($results)) {
+            throw GenerationFailedException::withConsoleMessage("\x1B[1A\x1B[2K");
+        }
+
+        $this->taskResults = $this->compileTasksResults($results);
+
+        $this->outputTasksResults();
 
         return $this;
+    }
+
+    protected function anyTasksFailed($results)
+    {
+        return collect($results)->contains('');
+    }
+
+    protected function compileTasksResults(array $results)
+    {
+        $results = collect($results);
+
+        return [
+            'count' => $results->sum('count'),
+            'warnings' => $results->flatMap->warnings,
+            'errors' => $results->flatMap->errors,
+        ];
     }
 
     protected function gatherContent()
@@ -225,7 +238,8 @@ class Generator
     {
         return $pages->split($this->workers)->map(function ($pages) use ($request) {
             return function () use ($pages, $request) {
-                $count = $skips = $warnings = 0;
+                $count = 0;
+                $warnings = [];
                 $errors = [];
 
                 foreach ($pages as $page) {
@@ -242,33 +256,50 @@ class Generator
                     try {
                         $generated = $page->generate($request);
                     } catch (NotGeneratedException $e) {
-                        $skips++;
+                        if ($this->shouldFail($e)) {
+                            throw GenerationFailedException::withConsoleMessage("\x1B[1A\x1B[2K".$e->consoleMessage());
+                        }
+
                         $errors[] = $e->consoleMessage();
                         continue;
                     }
 
                     if ($generated->hasWarning()) {
-                        $warnings++;
+                        if ($this->shouldFail($generated)) {
+                            throw GenerationFailedException::withConsoleMessage($generated->consoleMessage());
+                        }
+
+                        $warnings[] = $generated->consoleMessage();
                     }
                 }
 
-                return compact('count', 'skips', 'warnings', 'errors');
+                return compact('count', 'warnings', 'errors');
             };
         })->all();
     }
 
-    protected function outputResults($results)
+    protected function outputTasksResults()
     {
-        $results = collect($results);
+        $results = $this->taskResults;
 
-        Partyline::line("\x1B[1A\x1B[2K<info>[✔]</info> Generated {$results->sum('count')} content files");
+        Partyline::line("\x1B[1A\x1B[2K<info>[✔]</info> Generated {$results['count']} content files");
 
-        if ($results->sum('skips')) {
-            $results->reduce(function ($carry, $item) {
-                return $carry->merge($item['errors']);
-            }, collect())->each(function ($error) {
-                Partyline::line($error);
-            });
+        $results['warnings']->merge($results['errors'])->each(fn ($error) => Partyline::line($error));
+    }
+
+    protected function outputSummary()
+    {
+        Partyline::info('');
+        Partyline::info('Static site generated into ' . $this->config['destination']);
+
+        $total = $this->taskResults['count'];
+
+        if ($errors = count($this->taskResults['errors'])) {
+            Partyline::warn("[!] {$errors}/{$total} pages not generated");
+        }
+
+        if ($warnings = count($this->taskResults['warnings'])) {
+            Partyline::warn("[!] {$warnings}/{$total} pages generated with warnings");
         }
     }
 
@@ -366,5 +397,16 @@ class Generator
         }
 
         throw new \RuntimeException('To use multiple workers, you must install PHP 8 and spatie/fork.');
+    }
+
+    protected function shouldFail($item)
+    {
+        $config = $this->config['failures'];
+
+        if ($item instanceof NotGeneratedException) {
+            return in_array($config, ['warnings', 'errors']);
+        }
+
+        return $config === 'warnings';
     }
 }
