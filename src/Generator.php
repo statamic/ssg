@@ -175,11 +175,20 @@ class Generator
 
         $results = $this->tasks->run(...$closures);
 
+        if ($this->anyTasksFailed($results)) {
+            throw GenerationFailedException::withConsoleMessage("\x1B[1A\x1B[2K");
+        }
+
         $this->taskResults = $this->compileTasksResults($results);
 
         $this->outputTasksResults();
 
         return $this;
+    }
+
+    protected function anyTasksFailed($results)
+    {
+        return collect($results)->contains('');
     }
 
     protected function compileTasksResults(array $results)
@@ -247,11 +256,19 @@ class Generator
                     try {
                         $generated = $page->generate($request);
                     } catch (NotGeneratedException $e) {
+                        if ($this->shouldFail($e)) {
+                            throw GenerationFailedException::withConsoleMessage("\x1B[1A\x1B[2K".$e->consoleMessage());
+                        }
+
                         $errors[] = $e->consoleMessage();
                         continue;
                     }
 
                     if ($generated->hasWarning()) {
+                        if ($this->shouldFail($generated)) {
+                            throw GenerationFailedException::withConsoleMessage($generated->consoleMessage());
+                        }
+
                         $warnings[] = $generated->consoleMessage();
                     }
                 }
@@ -380,5 +397,16 @@ class Generator
         }
 
         throw new \RuntimeException('To use multiple workers, you must install PHP 8 and spatie/fork.');
+    }
+
+    protected function shouldFail($item)
+    {
+        $config = $this->config['failures'];
+
+        if ($item instanceof NotGeneratedException) {
+            return in_array($config, ['warnings', 'errors']);
+        }
+
+        return $config === 'warnings';
     }
 }
