@@ -23,12 +23,12 @@ class Request extends \Illuminate\Http\Request
         return $this;
     }
 
-    public function getScheme()
+    public function getScheme(): string
     {
         return explode('://', $this->config['base_url'])[0];
     }
 
-    public function getHttpHost()
+    public function getHttpHost(): string
     {
         $withoutScheme = rtrim(explode('://', $this->config['base_url'])[1], '/');
 
@@ -37,7 +37,7 @@ class Request extends \Illuminate\Http\Request
         return ($length === 0) ? $withoutScheme : substr($withoutScheme, 0, -$length);
     }
 
-    protected function prepareBaseUrl()
+    protected function prepareBaseUrl(): string
     {
         $withoutScheme = rtrim(explode('://', $this->config['base_url'])[1], '/');
 
@@ -46,7 +46,7 @@ class Request extends \Illuminate\Http\Request
         return $base !== '' ? '/'.$base : $base;
     }
 
-    public function getPathInfo()
+    public function getPathInfo(): string
     {
         return $this->page->url();
     }
