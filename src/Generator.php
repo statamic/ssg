@@ -91,9 +91,9 @@ class Generator
         }
 
         $this
-            ->createContentFiles()
             ->createSymlinks()
             ->copyFiles()
+            ->createContentFiles()
             ->outputSummary();
 
         if ($this->after) {
