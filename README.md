@@ -110,7 +110,28 @@ By default, the command will finish and exit with a success code even if there w
 ```php
 'failures' => 'errors', // or 'warnings'
 ```
+## Reusing Glide generated cache output
 
+You may see slow build times for pages that load faster in other environments if you have multiple image manipulations going on with Glide.
+
+To reuse the Glide cache you can use the `copy` or `symlinks` config options to add `storage/app/static/img` contents from somewhere else in the build system, and the generator will use that cache.
+
+If you are using Netlify, you can also utilize [netlify-plugin-cache](https://github.com/jakejarvis/netlify-plugin-cache) plugin to automatically restore and save directories:
+
+1. [Install the plugin into your project](https://docs.netlify.com/configure-builds/build-plugins/#file-based-installation)
+2. Add the following code in your [netlify.toml](https://docs.netlify.com/configure-builds/file-based-configuration/) file:
+```toml
+[[plugins]]
+package = "netlify-plugin-cache"
+
+  [plugins.inputs]
+  # This is default Glide image cache directory for SSG.
+  # Make sure the path matches with `directory` and `glide.directory` config options from `ssg.php` config file
+  paths = ["storage/app/static/img"]
+```
+3. Set `clear_destination_directory` to `false`, this is because by default the generator clears the SSG output directory when the generator starts, and the Netlify plugin restores the cached directories *before* this SSG generation step.
+
+Commit the changes and deploy! After the first initial deploy, the subsequent builds should see a significant decrease in build times.
 
 ## Deployment Examples
 
