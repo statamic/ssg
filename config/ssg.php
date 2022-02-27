@@ -28,6 +28,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Clear Destination Directory
+    |--------------------------------------------------------------------------
+    |
+    | This option defines if the destination directory should be cleared when
+    | running the generator.
+    |
+    */
+    'clear_destination_directory' => env('SSG_CLEAR_DESTINATION_DIRECTORY', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Files and Symlinks
     |--------------------------------------------------------------------------
     |
