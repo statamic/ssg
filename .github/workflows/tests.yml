@@ -28,6 +28,9 @@ jobs:
           - php: 8.0
             dependency-version: prefer-lowest
             additional-deps: '"mockery/mockery:>=1.3.3"'
+        exclude:
+          - laravel: 9.*
+            php: 7.4
 
     name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.dependency-version }} - ubuntu-latest
 
