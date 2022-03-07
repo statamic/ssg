@@ -23,7 +23,7 @@ jobs:
           - laravel: 8.*
             testbench: 6.*
             laravel-constraint: ^8.18.1
-            testbench-constraint: ^6.7.0
+            testbench-constraint: ^6.22.0
           - php: 7.4
             dependency-version: prefer-lowest
             additional-deps: '"mockery/mockery:>=1.2.3"'
