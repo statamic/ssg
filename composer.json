@@ -28,7 +28,7 @@
     },
     "require-dev": {
         "orchestra/testbench": "^6.7.0 || ^7.0",
-        "phpunit/phpunit": "^8.5.23"
+        "phpunit/phpunit": "^8.5.23 || ^9.0"
     },
     "suggest": {
         "spatie/fork": "Required to generate pages concurrently (^0.0.4)."
