@@ -5,6 +5,7 @@ namespace Statamic\StaticSite\Commands;
 use Illuminate\Console\Command;
 use Statamic\StaticSite\Generator;
 use Statamic\Console\RunsInPlease;
+use Statamic\StaticSite\GenerationFailedException;
 use Wilderborn\Partyline\Facade as Partyline;
 
 class StaticSiteGenerate extends Command
@@ -55,8 +56,16 @@ class StaticSiteGenerate extends Command
             $this->comment('You may be able to speed up site generation significantly by installing spatie/fork and using multiple workers (requires PHP 8+).');
         }
 
-        $this->generator
-            ->workers($workers ?? 1)
-            ->generate();
+        try {
+            $this->generator
+                ->workers($workers ?? 1)
+                ->generate();
+        } catch (GenerationFailedException $e) {
+            $this->line($e->getConsoleMessage());
+            $this->error('Static site generation failed.');
+            return 1;
+        }
+
+        return 0;
     }
 }

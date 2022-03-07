@@ -6,11 +6,6 @@ Generate static sites with Statamic 3.
 
 
 
-## License
-
-No license is required during the Statamic 3 beta period.
-
-
 ## Installation
 
 Install the package using Composer:
@@ -105,6 +100,18 @@ class AppServiceProvider extends Provider
 }
 ```
 
+
+## Triggering Command Failures
+
+If you are using the SSG in a CI environment, you may want to prevent the command from succeeding if any pages aren't generated (e.g. to prevent deployment of an incomplete site).
+
+By default, the command will finish and exit with a success code even if there were un-generated pages. You can tell configure the SSG to fail early on errors, or even on warnings.
+
+```php
+'failures' => 'errors', // or 'warnings'
+```
+
+
 ## Deployment Examples
 
 These examples assume your workflow will be to author content **locally** and _not_ using the control panel in production.
@@ -115,9 +122,8 @@ Deployments are triggered by committing to Git and pushing to GitHub.
 
 - Create a site in your [Netlify](https://netlify.com) account
 - Link the site to your desired GitHub repository
-- Add build command `php please ssg:generate`
+- Add build command `php please ssg:generate` (if you need to compile css/js, be sure to add that command too. e.g. `php please ssg:generate && npm install && npm run prod`).
 - Set publish directory `storage/app/static`
-- Add environment variable: `PHP_VERSION` `7.4`
 
 After your site has an APP_URL...
 
