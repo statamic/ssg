@@ -20,21 +20,13 @@ return [
     | Destination Directory
     |--------------------------------------------------------------------------
     |
-    | This option defines where the static files will be saved.
+    | This option defines where the static files will be saved, and whether
+    | or not it should get cleared out before generating the new files.
     |
     */
 
     'destination' => storage_path('app/static'),
 
-    /*
-    |--------------------------------------------------------------------------
-    | Clear Destination Directory
-    |--------------------------------------------------------------------------
-    |
-    | This option defines if the destination directory should be cleared when
-    | running the generator.
-    |
-    */
     'clear_destination_directory' => env('SSG_CLEAR_DESTINATION_DIRECTORY', true),
 
     /*
