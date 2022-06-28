@@ -101,6 +101,41 @@ class AppServiceProvider extends Provider
 ```
 
 
+## Glide Images
+
+The default configuration of Statamic is to have Glide use "dynamic" images, which means that the `glide` tag will only output URLs. The images themselves will be generated when the URLs are visited. For a static site, this no longer makes sense since it will typically be deployed somewhere where there is no dynamic Glide route available.
+
+By default, the SSG will automatically reconfigure Glide to generate images into the `img` directory whenever `glide` tags are used. This is essentially Glide's [custom static path option](https://statamic.dev/image-manipulation#custom-path-static).
+
+You can customize where the images will be generated:
+
+```php
+'glide' => [
+    'directory' => 'images',
+],
+```
+
+If you are using a [custom glide disk](https://statamic.dev/image-manipulation#custom-disk-cdn), you can tell the SSG to leave it alone:
+
+```php
+'glide' => [
+    'override' => false,
+],
+```
+
+And then copy the images over (or create a symlink) after generating has completed:
+
+```php
+SSG::after(function () {
+    $from = public_path('img');
+    $to = config('statamic.ssg.destination').'/img';
+
+    app('files')->copyDirectory($from, $to);
+    // or
+    app('files')->link($from, $to);
+});
+```
+
 ## Triggering Command Failures
 
 If you are using the SSG in a CI environment, you may want to prevent the command from succeeding if any pages aren't generated (e.g. to prevent deployment of an incomplete site).
