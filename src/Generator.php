@@ -105,8 +105,13 @@ class Generator
     {
         $directory = Arr::get($this->config, 'glide.directory');
 
+        // Determine which adapter to use for Flysystem 1.x or 3.x.
+        $localAdapter = class_exists($legacyAdapter = '\League\Flysystem\Adapter\Local')
+            ? $legacyAdapter
+            : '\League\Flysystem\Local\LocalFilesystemAdapter';
+
         $this->app['League\Glide\Server']->setCache(
-            new Flysystem(new Local($this->config['destination'] . '/' . $directory))
+            new Flysystem(new $localAdapter($this->config['destination'] . '/' . $directory))
         );
 
         $this->app->bind(UrlBuilder::class, function () use ($directory) {

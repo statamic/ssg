@@ -24,13 +24,14 @@
         }
     },
     "require": {
-        "statamic/cms": "~3.1.7 || 3.2.*"
+        "statamic/cms": "~3.3.0"
     },
     "require-dev": {
-        "orchestra/testbench": "^4.0"
+        "orchestra/testbench": "^6.22.0 || ^7.0"
     },
     "suggest": {
         "spatie/fork": "Required to generate pages concurrently (^0.0.4)."
     },
-    "minimum-stability": "dev"
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }

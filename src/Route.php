@@ -27,7 +27,7 @@ class Route
 
     public function site()
     {
-        return Site::findByUrl($this->url);
+        return Site::findByUrl($this->url) ?? Site::default();
     }
 
     public function toResponse($request)
