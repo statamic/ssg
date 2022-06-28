@@ -20,14 +20,11 @@ return [
     | Destination Directory
     |--------------------------------------------------------------------------
     |
-    | This option defines where the static files will be saved, and whether
-    | or not it should get cleared out before generating the new files.
+    | This option defines where the static files will be saved.
     |
     */
 
     'destination' => storage_path('app/static'),
-
-    'clear_destination_directory' => true,
 
     /*
     |--------------------------------------------------------------------------

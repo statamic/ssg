@@ -85,13 +85,8 @@ class Generator
 
         $this
             ->bindGlide()
-            ->backupViewPaths();
-
-        if ($this->config['clear_destination_directory'] === true) {
-            $this->clearDirectory();
-        }
-
-        $this
+            ->backupViewPaths()
+            ->clearDirectory()
             ->createContentFiles()
             ->createSymlinks()
             ->copyFiles()
