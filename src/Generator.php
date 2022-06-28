@@ -84,13 +84,8 @@ class Generator
 
         $this
             ->bindGlide()
-            ->backupViewPaths();
-
-        if ($this->config['clear_destination_directory'] === true) {
-            $this->clearDirectory();
-        }
-
-        $this
+            ->backupViewPaths()
+            ->clearDirectory()
             ->createSymlinks()
             ->copyFiles()
             ->createContentFiles()
@@ -132,6 +127,10 @@ class Generator
 
     public function clearDirectory()
     {
+        if ($this->config['clear_destination_directory'] === false) {
+            return $this;
+        }
+
         $this->files->deleteDirectory($this->config['destination'], true);
 
         return $this;
