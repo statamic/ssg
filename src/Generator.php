@@ -11,6 +11,7 @@ use Illuminate\Routing\Router;
 use Illuminate\Support\Arr;
 use Statamic\Facades\Collection;
 use Statamic\Facades\Entry;
+use Statamic\Facades\Glide;
 use Statamic\Facades\Term;
 use League\Flysystem\Adapter\Local;
 use Statamic\Imaging\ImageGenerator;
@@ -98,6 +99,14 @@ class Generator
 
     public function bindGlide()
     {
+        $override = $this->config['glide']['override'] ?? true;
+
+        if (! $override) {
+            return $this;
+        }
+
+        Glide::cacheStore()->clear();
+
         $directory = Arr::get($this->config, 'glide.directory');
 
         // Determine which adapter to use for Flysystem 1.x or 3.x.

@@ -88,6 +88,7 @@ return [
 
     'glide' => [
         'directory' => 'img',
+        'override' => true,
     ],
 
     /*
