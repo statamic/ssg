@@ -260,6 +260,7 @@ class Generator
                 $errors = [];
 
                 foreach ($pages as $page) {
+                    // There is no getter method, so use reflection.
                     $oldCarbonFormat = (new \ReflectionClass(Carbon::class))->getStaticPropertyValue('toStringFormat');
 
                     if ($this->shouldSetCarbonFormat($page)) {
