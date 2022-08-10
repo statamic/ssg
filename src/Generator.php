@@ -2,7 +2,9 @@
 
 namespace Statamic\StaticSite;
 
+use Carbon\Carbon;
 use Spatie\Fork\Fork;
+use Statamic\Statamic;
 use Facades\Statamic\View\Cascade;
 use Statamic\Facades\URL;
 use Statamic\Support\Str;
@@ -258,6 +260,13 @@ class Generator
                 $errors = [];
 
                 foreach ($pages as $page) {
+                    // There is no getter method, so use reflection.
+                    $oldCarbonFormat = (new \ReflectionClass(Carbon::class))->getStaticPropertyValue('toStringFormat');
+
+                    if ($this->shouldSetCarbonFormat($page)) {
+                        Carbon::setToStringFormat(Statamic::dateFormat());
+                    }
+
                     $this->updateCurrentSite($page->site());
 
                     view()->getFinder()->setPaths($this->viewPaths);
@@ -277,6 +286,8 @@ class Generator
 
                         $errors[] = $e->consoleMessage();
                         continue;
+                    } finally {
+                        Carbon::setToStringFormat($oldCarbonFormat);
                     }
 
                     if ($generated->hasWarning()) {
@@ -385,7 +396,7 @@ class Generator
                 && ! Str::contains($route->uri(), '{');
         })->map(function ($route) {
             $url = URL::tidy(Str::start($route->uri(), $this->config['base_url'].'/'));
-            return $this->createPage(new Route($url));
+            return $this->createPage(new StatamicRoute($url));
         });
     }
 
@@ -423,5 +434,14 @@ class Generator
         }
 
         return $config === 'warnings';
+    }
+
+    protected function shouldSetCarbonFormat($page)
+    {
+        $content = $page->content();
+
+        return $content instanceof \Statamic\Contracts\Entries\Entry
+            || $content instanceof \Statamic\Contracts\Taxonomies\Term
+            || $content instanceof StatamicRoute;
     }
 }
