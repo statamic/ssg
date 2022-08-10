@@ -20,6 +20,11 @@ class Page
         $this->content = $content;
     }
 
+    public function content()
+    {
+        return $this->content;
+    }
+
     public function isGeneratable()
     {
         return $this->content->published();
