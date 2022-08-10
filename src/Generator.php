@@ -176,7 +176,11 @@ class Generator
 
     protected function createContentFiles()
     {
-        $request = $this->makeRequest();
+        $request = tap(Request::capture(), function ($request) {
+            $request->setConfig($this->config);
+            $this->app->instance('request', $request);
+            Cascade::withRequest($request);
+        });
 
         $pages = $this->gatherContent();
 
@@ -388,18 +392,6 @@ class Generator
     protected function createPage($content)
     {
         return new Page($this->files, $this->config, $content);
-    }
-
-    protected function makeRequest()
-    {
-        $request = tap(Request::capture(), function ($request) {
-            $request->setConfig($this->config);
-            $this->app->instance('request', $request);
-        });
-
-        Cascade::withRequest($request);
-
-        return $request;
     }
 
     protected function updateCurrentSite($site)
