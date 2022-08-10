@@ -179,6 +179,7 @@ class Generator
         $request = tap(Request::capture(), function ($request) {
             $request->setConfig($this->config);
             $this->app->instance('request', $request);
+            Cascade::withRequest($request);
         });
 
         $pages = $this->gatherContent();
