@@ -32,6 +32,8 @@ class Route
 
     public function toResponse($request)
     {
+        $this->checkIpAddress($request);
+        
         $kernel = app(Kernel::class);
         $response = $kernel->handle($request);
         $kernel->terminate($request, $response);
@@ -45,5 +47,15 @@ class Route
         }
 
         return $response;
+    }
+    
+    private function checkIpAddress(&$request)
+    {
+        if (! is_null($request->ip())) {
+            return; // Do nothing if a IP address has been set.
+        }
+
+        // Setting an IP address does prevent an error, if trusted proxies as set to `*`.
+        $request->server->add(['REMOTE_ADDR' => '0.0.0.0']);
     }
 }
