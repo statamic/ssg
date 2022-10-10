@@ -17,10 +17,6 @@ jobs:
         stability: [prefer-lowest, prefer-stable]
         os: [ubuntu-latest]
         include:
-          - laravel: 8.*
-            framework: ^8.24.0
-          - laravel: 9.*
-            framework: ^9.0
           - os: windows-latest
             php: 7.4
             laravel: 8.*
@@ -50,7 +46,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          composer require "laravel/framework:${{ matrix.framework }}" --no-interaction --no-update
+          composer require "illuminate/contracts:${{ matrix.laravel }}" --no-interaction --no-update
           composer update --${{ matrix.stability }} --prefer-dist --no-interaction --no-suggest
 
       - name: Execute tests
