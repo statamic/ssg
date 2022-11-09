@@ -35,6 +35,7 @@ class Generator
     protected $request;
     protected $after;
     protected $viewPaths;
+    protected $viewHints;
     protected $extraUrls;
     protected $workers = 1;
     protected $taskResults;
@@ -88,6 +89,7 @@ class Generator
         $this
             ->bindGlide()
             ->backupViewPaths()
+            ->backupViewHints()
             ->clearDirectory()
             ->createContentFiles()
             ->createSymlinks()
@@ -134,6 +136,27 @@ class Generator
         $this->viewPaths = view()->getFinder()->getPaths();
 
         return $this;
+    }
+
+    public function backupViewHints()
+    {
+        $this->viewHints = view()->getFinder()->getHints();
+
+        return $this;
+    }
+
+    public function restoreViewPaths()
+    {
+        view()->getFinder()->setPaths($this->viewPaths);
+    }
+
+    public function restoreViewHints()
+    {
+        foreach ($this->viewHints as $namespace => $paths) {
+            foreach ($paths as $path) {
+                view()->getFinder()->replaceNamespace($namespace, $path);
+            }
+        }
     }
 
     public function clearDirectory()
@@ -269,7 +292,8 @@ class Generator
 
                     $this->updateCurrentSite($page->site());
 
-                    view()->getFinder()->setPaths($this->viewPaths);
+                    $this->restoreViewPaths();
+                    $this->restoreViewHints();
 
                     $count++;
 
