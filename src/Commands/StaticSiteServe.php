@@ -85,7 +85,7 @@ class StaticSiteServe extends Command
      */
     protected function serverCommand()
     {
-        $server = __DIR__.'/../../resources/server.php';
+        $server = __DIR__.'/../resources/server.php';
 
         return [
             (new PhpExecutableFinder)->find(false),
