@@ -31,6 +31,7 @@ class ServiceProvider extends LaravelServiceProvider
                 Commands\StaticSiteClear::class,
                 Commands\StaticSiteGenerate::class,
                 Commands\StaticSiteLinks::class,
+                Commands\StaticSiteServe::class,
             ]);
         }
     }
