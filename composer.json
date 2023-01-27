@@ -24,7 +24,7 @@
         }
     },
     "require": {
-        "statamic/cms": "~3.3.54"
+        "statamic/cms": "~3.3.54 || ~3.4.0"
     },
     "require-dev": {
         "orchestra/testbench": "^6.22.0 || ^7.0"
