@@ -34,7 +34,6 @@ class Generator
     protected $config;
     protected $request;
     protected $after;
-    protected $viewPaths;
     protected $extraUrls;
     protected $workers = 1;
     protected $taskResults;
@@ -87,7 +86,6 @@ class Generator
 
         $this
             ->bindGlide()
-            ->backupViewPaths()
             ->clearDirectory()
             ->createContentFiles()
             ->createSymlinks()
@@ -125,13 +123,6 @@ class Generator
                 'route' => URL::tidy($this->config['base_url'] . '/' . $directory)
             ]);
         });
-
-        return $this;
-    }
-
-    public function backupViewPaths()
-    {
-        $this->viewPaths = view()->getFinder()->getPaths();
 
         return $this;
     }
@@ -268,8 +259,6 @@ class Generator
                     }
 
                     $this->updateCurrentSite($page->site());
-
-                    view()->getFinder()->setPaths($this->viewPaths);
 
                     $count++;
 
