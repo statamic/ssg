@@ -37,6 +37,7 @@ class Generator
     protected $extraUrls;
     protected $workers = 1;
     protected $taskResults;
+    protected $viewPaths;
 
     public function __construct(Application $app, Filesystem $files, Router $router, Tasks $tasks)
     {
@@ -86,10 +87,12 @@ class Generator
 
         $this
             ->bindGlide()
+            ->backupViewPaths()
             ->clearDirectory()
             ->createContentFiles()
             ->createSymlinks()
             ->copyFiles()
+            ->restoreViewPaths()
             ->outputSummary();
 
         if ($this->after) {
@@ -166,6 +169,21 @@ class Generator
 
         return $this;
     }
+
+    protected function backupViewPaths()
+    {
+        $this->viewPaths = view()->getFinder()->getPaths();
+
+        return $this;
+    }
+
+    protected function restoreViewPaths()
+    {
+        view()->getFinder()->setPaths($this->viewPaths);
+
+        return $this;
+    }
+
 
     protected function createContentFiles()
     {
@@ -398,6 +416,7 @@ class Generator
     {
         Site::setCurrent($site->handle());
         Cascade::withSite($site);
+        $this->setViewPaths($site->handle());
 
         // Set the locale for dates, carbon, and for the translator.
         // This is what happens in Statamic's Localize middleware.
@@ -432,5 +451,21 @@ class Generator
         return $content instanceof \Statamic\Contracts\Entries\Entry
             || $content instanceof \Statamic\Contracts\Taxonomies\Term
             || $content instanceof StatamicRoute;
+    }
+
+    protected function setViewPaths($site)
+    {
+        $paths = collect($this->viewPaths)->flatMap(function ($path) use ($site) {
+            $amp = Statamic::isAmpRequest();
+
+            return [
+                $amp ? $path . '/' . $site . '/amp' : null,
+                $path . '/' . $site,
+                $amp ? $path . '/amp' : null,
+                $path,
+            ];
+        })->filter()->values()->all();
+
+        view()->getFinder()->setPaths($paths);
     }
 }
