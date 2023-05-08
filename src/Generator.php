@@ -333,16 +333,20 @@ class Generator
 
     protected function terms()
     {
-        return Term::all()->map(function ($content) {
-            return $this->createPage($content);
-        })->filter->isGeneratable();
+        return Term::all()
+            ->filter(fn ($term) => view()->exists($term->template()))
+            ->map(function ($content) {
+                return $this->createPage($content);
+            })->filter->isGeneratable();
     }
 
     protected function scopedTerms()
     {
         return Collection::all()
             ->flatMap(function ($collection) {
-                return $this->getCollectionTerms($collection);
+                return $this
+                    ->getCollectionTerms($collection)
+                    ->filter(fn ($term) => view()->exists($term->template()));
             })
             ->map(function ($content) {
                 return $this->createPage($content);
