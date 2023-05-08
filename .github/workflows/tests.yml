@@ -19,9 +19,15 @@ jobs:
         include:
           - os: windows-latest
             php: 8.1
-            laravel: 10.*
-            framework: ^9.0
+            laravel: 9.*
             stability: prefer-stable
+          - os: windows-latest
+            php: 8.1
+            laravel: 10.*
+            stability: prefer-stable
+        exclude:
+          - php: 8.0
+            laravel: 10.*
 
     name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
 
