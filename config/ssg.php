@@ -39,13 +39,13 @@ return [
     */
 
     'copy' => [
-        public_path('css') => 'css',
-        public_path('js') => 'js',
+        public_path('build') => 'build',
+        public_path('assets') => 'assets',
     ],
 
     'symlinks' => [
-        // public_path('css') => 'css',
-        // public_path('js') => 'js',
+//         public_path('build') => 'build',
+//         public_path('assets') => 'assets',
     ],
 
     /*
