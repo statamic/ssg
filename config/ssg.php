@@ -43,7 +43,7 @@ return [
     ],
 
     'symlinks' => [
-//         public_path('build') => 'build',
+        // public_path('build') => 'build',
     ],
 
     /*
