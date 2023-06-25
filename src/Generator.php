@@ -92,7 +92,7 @@ class Generator
 
         Site::setCurrent(Site::default()->handle());
 
-        if ($this->freshBuild()) {
+        if ($this->fresh) {
             $this->clearDirectory();
         }
 
@@ -176,11 +176,6 @@ class Generator
         }
 
         return $this;
-    }
-
-    protected function freshBuild()
-    {
-        return $this->fresh;
     }
 
     protected function createContentFiles()
