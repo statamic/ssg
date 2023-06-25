@@ -59,7 +59,8 @@ class StaticSiteGenerate extends Command
         try {
             $this->generator
                 ->workers($workers ?? 1)
-                ->generate($this->option('fresh'));
+                ->fresh($this->option('fresh') ?? false)
+                ->generate();
         } catch (GenerationFailedException $e) {
             $this->line($e->getConsoleMessage());
             $this->error('Static site generation failed.');
