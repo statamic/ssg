@@ -78,15 +78,18 @@ class Generator
         $this->extraUrls[] = $closure;
     }
 
-    public function generate()
+    public function generate($fresh = false)
     {
         $this->checkConcurrencySupport();
 
         Site::setCurrent(Site::default()->handle());
 
+        if ($fresh) {
+            $this->clearDirectory();
+        }
+
         $this
             ->bindGlide()
-            ->clearDirectory()
             ->createContentFiles()
             ->createSymlinks()
             ->copyFiles()
