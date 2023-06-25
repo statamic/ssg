@@ -86,7 +86,7 @@ class Generator
         $this->extraUrls[] = $closure;
     }
 
-    public function generate(array $urls = [])
+    public function generate()
     {
         $this->checkConcurrencySupport();
 
@@ -105,7 +105,7 @@ class Generator
                         $this->page($url)
                     );
 
-                    // If this page is is the start of a paginated collected, generate all of the paginated URLs too
+                    // If this page is the start of a paginated collection, generate all the paginated URLs too
                     if (array_key_exists($url, ($this->config['paginators'] ?? []))) {
                         $this->createContentFiles(
                             $this->paginatedEntries($url, ...$this->config['paginators'][$url])
