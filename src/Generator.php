@@ -239,7 +239,7 @@ class Generator
                 }
 
                 return in_array($page->url(), $this->config['exclude']);
-            })->shuffle();
+            });
     }
 
     protected function makeContentGenerationClosures($pages, $request)
