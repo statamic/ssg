@@ -34,6 +34,7 @@ class Generator
     protected $config;
     protected $request;
     protected $after;
+    protected $explicitUrls = [];
     protected $extraUrls;
     protected $workers = 1;
     protected $taskResults;
@@ -73,6 +74,13 @@ class Generator
         return $this;
     }
 
+    public function explicitUrls(array $urls = [])
+    {
+        $this->explicitUrls = $urls;
+
+        return $this;
+    }
+
     public function addUrls($closure)
     {
         $this->extraUrls[] = $closure;
@@ -86,11 +94,11 @@ class Generator
 
         $this->bindGlide();
 
-        if (empty($urls)) {
+        if (empty($this->explicitUrls)) {
             $this->clearDirectory()
                 ->createContentFiles();
         } else {
-            foreach ($urls as $url) {
+            foreach ($this->explicitUrls as $url) {
                 try {
                     // Create the content file for this specific URL
                     $this->createContentFiles(
