@@ -91,10 +91,17 @@ class Generator
                 ->createContentFiles();
         } else {
             foreach ($urls as $url) {
-                try {
-                    $this->createContentFile(Str::start($url, '/'));
-                } catch (GenerationFailedException $e) {
-                    // When generating multiple URLs, we don't want to fail the entire process when one fails.
+                if (Str::contains($url, ':')) {
+                    // We're looking to loop over some paginated set
+                    // How to fetch those pages should be established elsewhere, but here we can loop over them and
+                    // generate the static files for each page from just a single URL.
+                    $this->createPaginatedFiles(...(explode(':', $url)));
+                } else {
+                    try {
+                        $this->createContentFile(Str::start($url, '/'));
+                    } catch (GenerationFailedException $e) {
+                        // When generating multiple URLs, we don't want to fail the entire process when one fails.
+                    }
                 }
             }
         }
@@ -223,6 +230,43 @@ class Generator
         Partyline::line("Generating content file...");
 
         $closures = $this->makeContentGenerationClosures($page, $request);
+
+        $results = $this->tasks->run(...$closures);
+
+        if ($this->anyTasksFailed($results)) {
+            throw GenerationFailedException::withConsoleMessage("\x1B[1A\x1B[2K");
+        }
+
+        $this->taskResults = $this->compileTasksResults($results);
+
+        $this->outputTasksResults();
+
+        return $this;
+    }
+
+    protected function createPaginatedFiles($url, $collection, $perPage = 10, $pathPart = 'page')
+    {
+        $request = tap(Request::capture(), function ($request) {
+            $request->setConfig($this->config);
+            $this->app->instance('request', $request);
+            Cascade::withRequest($request);
+        });
+
+        $total = Entry::query()
+            ->where('collection', $collection)
+            ->where('status', 'published')
+            ->count();
+
+        $pages = collect(range(1, ceil($total / $perPage)))
+            ->map(fn ($pageNum) => implode('/', [$url, $pathPart, $pageNum]))
+            ->map(function ($url) {
+                $url = Str::start($url, '/');
+                return $this->createPage(new Route($url));
+            });
+
+        Partyline::line("Generating paginated content files...");
+
+        $closures = $this->makeContentGenerationClosures($pages, $request);
 
         $results = $this->tasks->run(...$closures);
 
