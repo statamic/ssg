@@ -49,9 +49,7 @@ class Page
 
     protected function write($request)
     {
-        if (! $this->paginationCurrentPage) {
-            $request->merge(['page' => null]);
-        }
+        $request->merge(['page' => $this->paginationCurrentPage]);
 
         try {
             $response = $this->content->toResponse($request);
@@ -79,7 +77,7 @@ class Page
             try {
                 $page
                     ->setPaginationCurrentPage($pageNumber)
-                    ->write($request->merge(['page' => $pageNumber]));
+                    ->write($request);
             } catch (Exception $e) {
                 throw new NotGeneratedException($page, $e);
             }
