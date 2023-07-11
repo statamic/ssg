@@ -121,16 +121,6 @@ class Page
         return $url;
     }
 
-    protected function paginatedUrl($url)
-    {
-        $route = $this->config['pagination_route'];
-
-        $url = str_replace('{url}', $url, $route);
-        $url = str_replace('{number}', $this->paginationCurrentPage, $url);
-
-        return $url;
-    }
-
     public function site()
     {
         return $this->content->site();
