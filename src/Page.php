@@ -114,8 +114,8 @@ class Page
     {
         $url = $this->content->urlWithoutRedirect();
 
-        if ($this->paginationCurrentPage) {
-            $url = $this->paginatedUrl($url);
+        if ($pageNumber = $this->paginationCurrentPage) {
+            $url = LengthAwarePaginator::generatePaginatedUrl($url, $pageNumber);
         }
 
         return $url;

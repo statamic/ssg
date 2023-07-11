@@ -4,6 +4,7 @@ namespace Statamic\StaticSite;
 
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use Spatie\Fork\Fork;
+use Statamic\Extensions\Pagination\LengthAwarePaginator as StatamicLengthAwarePaginator;
 
 class ServiceProvider extends LaravelServiceProvider
 {
@@ -33,5 +34,15 @@ class ServiceProvider extends LaravelServiceProvider
                 Commands\StaticSiteServe::class,
             ]);
         }
+
+        $this->app->extend(StatamicLengthAwarePaginator::class, function ($paginator) {
+            return $this->app->makeWith(LengthAwarePaginator::class, [
+                'items' => $paginator->getCollection(),
+                'total' => $paginator->total(),
+                'perPage' => $paginator->perPage(),
+                'currentPage' => $paginator->currentPage(),
+                'options' => $paginator->getOptions(),
+            ]);
+        });
     }
 }
