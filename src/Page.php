@@ -6,12 +6,14 @@ use Exception;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Statamic\Facades\Blink;
 
 class Page
 {
     protected $files;
     protected $config;
     protected $content;
+    protected $paginationCurrentPage;
 
     public function __construct(Filesystem $files, array $config, $content)
     {
@@ -33,10 +35,16 @@ class Page
     public function generate($request)
     {
         try {
-            return $this->write($request);
+            $generatedPage = $this->write($request);
+
+            if ($paginator = $this->detectPaginator()) {
+                $this->writePaginatedPages($request, $paginator);
+            }
         } catch (Exception $e) {
             throw new NotGeneratedException($this, $e);
         }
+
+        return $generatedPage;
     }
 
     protected function write($request)
@@ -57,6 +65,15 @@ class Page
         $this->files->put($this->path(), $html);
 
         return new GeneratedPage($this, $response);
+    }
+
+    protected function writePaginatedPages($request, $paginator)
+    {
+        collect(range(1, $paginator->lastPage()))->each(function ($page) use ($request) {
+            (clone $this)
+                ->setPaginationCurrentPage($page)
+                ->write($request->merge(['page' => $page]));
+        });
     }
 
     public function directory()
@@ -85,7 +102,23 @@ class Page
 
     public function url()
     {
-        return $this->content->urlWithoutRedirect();
+        $url = $this->content->urlWithoutRedirect();
+
+        if ($this->paginationCurrentPage) {
+            $url = $this->paginatedUrl($url);
+        }
+
+        return $url;
+    }
+
+    protected function paginatedUrl($url)
+    {
+        $route = $this->config['pagination_route'];
+
+        $url = str_replace('{url}', $url, $route);
+        $url = str_replace('{number}', $this->paginationCurrentPage, $url);
+
+        return $url;
     }
 
     public function site()
@@ -96,5 +129,21 @@ class Page
     public function is404()
     {
         return $this->url() === '/404';
+    }
+
+    public function setPaginationCurrentPage($currentPage)
+    {
+        $this->paginationCurrentPage = $currentPage;
+
+        return $this;
+    }
+
+    protected function detectPaginator()
+    {
+        $paginator = Blink::get('tag-paginator');
+
+        Blink::forget('tag-paginator');
+
+        return $paginator;
     }
 }
