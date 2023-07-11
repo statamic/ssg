@@ -67,7 +67,7 @@ class Page
     public function path()
     {
         if ($this->is404()) {
-            return $this->config['destination'].'/404.html';
+            return $this->config['destination'] . '/404.html';
         }
 
         $url = $this->url();
@@ -76,9 +76,7 @@ class Page
 
         $url = $this->config['destination'].$url;
 
-        if ($ext === 'html') {
-            $url .= '/index.html';
-        }
+        if ($ext === 'html') $url .= '/index.html';
 
         return $url;
     }
