@@ -74,6 +74,8 @@ class Page
                 ->setPaginationCurrentPage($page)
                 ->write($request->merge(['page' => $page]));
         });
+
+        $this->clearPaginator();
     }
 
     public function directory()
@@ -142,8 +144,13 @@ class Page
     {
         $paginator = Blink::get('tag-paginator');
 
-        Blink::forget('tag-paginator');
+        $this->clearPaginator();
 
         return $paginator;
+    }
+
+    protected function clearPaginator()
+    {
+        Blink::forget('tag-paginator');
     }
 }
