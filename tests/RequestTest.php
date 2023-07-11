@@ -2,11 +2,10 @@
 
 namespace Tests;
 
-use Mockery;
-use Statamic\Facades\Site;
-use Statamic\Entries\Entry;
-use Statamic\StaticSite\Page;
 use Statamic\Entries\Collection;
+use Statamic\Entries\Entry;
+use Statamic\Facades\Site;
+use Statamic\StaticSite\Page;
 use Statamic\StaticSite\Request;
 
 class RequestTest extends TestCase
