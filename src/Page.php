@@ -4,8 +4,8 @@ namespace Statamic\StaticSite;
 
 use Exception;
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Http\RedirectResponse;
 use Statamic\Facades\Blink;
 
 class Page
@@ -84,14 +84,14 @@ class Page
     public function path()
     {
         if ($this->is404()) {
-            return $this->config['destination'] . '/404.html';
+            return $this->config['destination'].'/404.html';
         }
 
         $url = $this->url();
 
         $ext = pathinfo($url, PATHINFO_EXTENSION) ?: 'html';
 
-        $url = $this->config['destination'] . $url;
+        $url = $this->config['destination'].$url;
 
         if ($ext === 'html') {
             $url .= '/index.html';

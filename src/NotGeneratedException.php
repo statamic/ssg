@@ -3,8 +3,8 @@
 namespace Statamic\StaticSite;
 
 use Facade\Ignition\Exceptions\ViewException;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Statamic\Exceptions\NotFoundHttpException as StatamicNotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException as SymfonyNotFoundHttpException;
 
 class NotGeneratedException extends \Exception
@@ -37,12 +37,12 @@ class NotGeneratedException extends \Exception
                 $message = 'Resulted in 404';
                 break;
             case HttpException::class:
-                $message = 'Resulted in ' . $exception->getStatusCode();
+                $message = 'Resulted in '.$exception->getStatusCode();
                 break;
             default:
                 $message = $this->getMessage();
         }
 
-        return sprintf('%s %s (%s)', "<fg=red>[✘]</>", $this->getPage()->url(), $message);
+        return sprintf('%s %s (%s)', '<fg=red>[✘]</>', $this->getPage()->url(), $message);
     }
 }
