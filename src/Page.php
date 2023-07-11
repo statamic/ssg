@@ -49,6 +49,10 @@ class Page
 
     protected function write($request)
     {
+        if (! $this->paginationCurrentPage) {
+            $request->merge(['page' => null]);
+        }
+
         try {
             $response = $this->content->toResponse($request);
         } catch (HttpResponseException $e) {
