@@ -36,12 +36,12 @@ class Page
     {
         try {
             $generatedPage = $this->write($request);
-
-            if ($paginator = $this->detectPaginator()) {
-                $this->writePaginatedPages($request, $paginator);
-            }
         } catch (Exception $e) {
             throw new NotGeneratedException($this, $e);
+        }
+
+        if ($paginator = $this->detectPaginator()) {
+            $this->writePaginatedPages($request, $paginator);
         }
 
         return $generatedPage;
@@ -73,10 +73,16 @@ class Page
 
     protected function writePaginatedPages($request, $paginator)
     {
-        collect(range(1, $paginator->lastPage()))->each(function ($page) use ($request) {
-            (clone $this)
-                ->setPaginationCurrentPage($page)
-                ->write($request->merge(['page' => $page]));
+        collect(range(1, $paginator->lastPage()))->each(function ($pageNumber) use ($request) {
+            $page = clone $this;
+
+            try {
+                $page
+                    ->setPaginationCurrentPage($pageNumber)
+                    ->write($request->merge(['page' => $pageNumber]));
+            } catch (Exception $e) {
+                throw new NotGeneratedException($page, $e);
+            }
         });
 
         $this->clearPaginator();
