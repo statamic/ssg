@@ -2,8 +2,8 @@
 
 namespace Tests;
 
-use Statamic\Providers\StatamicServiceProvider;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
+use Statamic\Providers\StatamicServiceProvider;
 use Statamic\Statamic;
 
 class TestCase extends OrchestraTestCase

@@ -3,8 +3,8 @@
 namespace Statamic\StaticSite\Commands;
 
 use Illuminate\Console\Command;
-use Statamic\StaticSite\Generator;
 use Statamic\Console\RunsInPlease;
+use Statamic\StaticSite\Generator;
 use Wilderborn\Partyline\Facade as Partyline;
 
 class StaticSiteLinks extends Command

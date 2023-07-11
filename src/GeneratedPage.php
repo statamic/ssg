@@ -38,7 +38,7 @@ class GeneratedPage
         $message = vsprintf('%s%s %s', [
             "\x1B[1A\x1B[2K",
             $this->hasWarning() ? '<comment>[!]</comment>' : '<info>[✔]</info>',
-            $this->url()
+            $this->url(),
         ]);
 
         if ($this->isRedirect()) {

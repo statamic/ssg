@@ -3,9 +3,9 @@
 namespace Statamic\StaticSite\Commands;
 
 use Illuminate\Console\Command;
-use Statamic\StaticSite\Generator;
 use Statamic\Console\RunsInPlease;
 use Statamic\StaticSite\GenerationFailedException;
+use Statamic\StaticSite\Generator;
 use Wilderborn\Partyline\Facade as Partyline;
 
 class StaticSiteGenerate extends Command
@@ -63,6 +63,7 @@ class StaticSiteGenerate extends Command
         } catch (GenerationFailedException $e) {
             $this->line($e->getConsoleMessage());
             $this->error('Static site generation failed.');
+
             return 1;
         }
 
