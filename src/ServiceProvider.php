@@ -35,14 +35,16 @@ class ServiceProvider extends LaravelServiceProvider
             ]);
         }
 
-        $this->app->extend(StatamicLengthAwarePaginator::class, function ($paginator) {
-            return $this->app->makeWith(LengthAwarePaginator::class, [
-                'items' => $paginator->getCollection(),
-                'total' => $paginator->total(),
-                'perPage' => $paginator->perPage(),
-                'currentPage' => $paginator->currentPage(),
-                'options' => $paginator->getOptions(),
-            ]);
-        });
+        if ($this->app->runningInConsole()) {
+            $this->app->extend(StatamicLengthAwarePaginator::class, function ($paginator) {
+                return $this->app->makeWith(LengthAwarePaginator::class, [
+                    'items' => $paginator->getCollection(),
+                    'total' => $paginator->total(),
+                    'perPage' => $paginator->perPage(),
+                    'currentPage' => $paginator->currentPage(),
+                    'options' => $paginator->getOptions(),
+                ]);
+            });
+        }
     }
 }
