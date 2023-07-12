@@ -15,7 +15,7 @@ class LengthAwarePaginator extends StatamicLengthAwarePaginator
             $page = 1;
         }
 
-        $url = self::generatePaginatedUrl($this->path(), $page);
+        $url = self::generatePaginatedUrl($this->path(), $this->getPageName(), $page);
 
         if (Str::contains($this->path(), '?') || count($this->query)) {
             $url .= '?'.Arr::query($this->query);
@@ -24,15 +24,15 @@ class LengthAwarePaginator extends StatamicLengthAwarePaginator
         return $url.$this->buildFragment();
     }
 
-    public static function generatePaginatedUrl($url, $pageNumber)
+    public static function generatePaginatedUrl($url, $pageName, $pageNumber)
     {
         $route = config('statamic.ssg.pagination_route');
 
         $url = str_replace('{url}', $url, $route);
 
-        // TODO: handle $this->pageName?
+        $url = str_replace('{page_name}', $pageName, $url);
 
-        $url = str_replace('{number}', $pageNumber, $url);
+        $url = str_replace('{page_number}', $pageNumber, $url);
 
         return URL::makeRelative($url);
     }

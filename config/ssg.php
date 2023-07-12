@@ -84,7 +84,7 @@ return [
     |
     */
 
-    'pagination_route' => '{url}/page/{number}',
+    'pagination_route' => '{url}/{page_name}/{page_number}',
 
     /*
     |--------------------------------------------------------------------------
