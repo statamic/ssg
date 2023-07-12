@@ -13,6 +13,7 @@ class Page
     protected $files;
     protected $config;
     protected $content;
+    protected $paginationPageName;
     protected $paginationCurrentPage;
 
     public function __construct(Filesystem $files, array $config, $content)
@@ -40,7 +41,7 @@ class Page
             throw new NotGeneratedException($this, $e);
         }
 
-        if ($paginator = $this->detectPaginator()) {
+        if ($paginator = $this->detectPaginator($request)) {
             $this->writePaginatedPages($request, $paginator);
         }
 
@@ -49,7 +50,9 @@ class Page
 
     protected function write($request)
     {
-        $request->merge(['page' => $this->paginationCurrentPage]);
+        if ($this->paginationPageName) {
+            $request->merge([$this->paginationPageName => $this->paginationCurrentPage]);
+        }
 
         try {
             $response = $this->content->toResponse($request);
@@ -83,7 +86,7 @@ class Page
             }
         });
 
-        $this->clearPaginator();
+        $this->clearPaginator($request);
     }
 
     public function directory()
@@ -114,8 +117,12 @@ class Page
     {
         $url = $this->content->urlWithoutRedirect();
 
-        if ($pageNumber = $this->paginationCurrentPage) {
-            $url = LengthAwarePaginator::generatePaginatedUrl($url, $pageNumber);
+        if ($this->paginationCurrentPage) {
+            $url = LengthAwarePaginator::generatePaginatedUrl(
+                $url,
+                $this->paginationPageName,
+                $this->paginationCurrentPage
+            );
         }
 
         return $url;
@@ -138,17 +145,23 @@ class Page
         return $this;
     }
 
-    protected function detectPaginator()
+    protected function detectPaginator($request)
     {
-        $paginator = Blink::get('tag-paginator');
+        if ($paginator = Blink::get('tag-paginator')) {
+            $this->paginationPageName = $paginator->getPageName();
+        }
 
-        $this->clearPaginator();
+        $this->clearPaginator($request);
 
         return $paginator;
     }
 
-    protected function clearPaginator()
+    protected function clearPaginator($request)
     {
         Blink::forget('tag-paginator');
+
+        if ($this->paginationPageName) {
+            $request->merge([$this->paginationPageName => null]);
+        }
     }
 }
