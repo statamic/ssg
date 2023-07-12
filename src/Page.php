@@ -161,7 +161,7 @@ class Page
         Blink::forget('tag-paginator');
 
         if ($this->paginationPageName) {
-            $request->merge([$this->paginationPageName => null]);
+            $request->forget($this->paginationPageName);
         }
     }
 }
