@@ -17,6 +17,24 @@ class GenerateTest extends TestCase
         parent::getEnvironmentSetUp($app);
 
         $app['config']->set('statamic.editions.pro', true);
+
+        $app['config']->set('statamic.sites.sites', [
+            'default' => [
+                'name' => 'English',
+                'locale' => 'en_US',
+                'url' => '/',
+            ],
+            'french' => [
+                'name' => 'French',
+                'locale' => 'fr_FR',
+                'url' => '/fr/',
+            ],
+            'italian' => [
+                'name' => 'Italian',
+                'locale' => 'it_IT',
+                'url' => '/it/',
+            ],
+        ]);
     }
 
     /** @test */

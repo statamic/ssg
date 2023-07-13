@@ -59,22 +59,11 @@ class TestCase extends OrchestraTestCase
         foreach ($configs as $config) {
             $app['config']->set("statamic.$config", require(__DIR__."/../vendor/statamic/cms/config/{$config}.php"));
         }
+    }
 
-        $files = new Filesystem;
-
-        $files->copyDirectory(__DIR__.'/../vendor/statamic/cms/config', config_path('statamic'));
-
-        $configs = [
-            'filesystems',
-            'statamic/users',
-            'statamic/stache',
-            'statamic/sites',
-        ];
-
-        foreach ($configs as $config) {
-            $files->delete(config_path("{$config}.php"));
-            $files->copy("{$this->siteFixturePath}/config/{$config}.php", config_path("{$config}.php"));
-            $app['config']->set(str_replace('/', '.', $config), require("{$this->siteFixturePath}/config/{$config}.php"));
-        }
+    protected function getEnvironmentSetUp($app)
+    {
+        $app['config']->set('auth.providers.users.driver', 'statamic');
+        $app['config']->set('statamic.users.repository', 'file');
     }
 }
