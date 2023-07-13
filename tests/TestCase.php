@@ -8,7 +8,8 @@ use Statamic\Statamic;
 
 class TestCase extends OrchestraTestCase
 {
-    protected $siteFixturePath = __DIR__.'/Fixtures/site';
+    protected $fixturePath = __DIR__.'/Fixtures';
+    protected $siteFixture = 'site';
 
     protected function getPackageProviders($app)
     {
@@ -32,19 +33,30 @@ class TestCase extends OrchestraTestCase
 
         $this->files = app(Filesystem::class);
 
-        $this->copyDirectoryFromFixture('content');
         $this->copyDirectoryFromFixture('resources');
+        $this->copyDirectoryFromSiteFixture('content');
 
         $this->app->instance('fork-installed', false);
     }
 
-    protected function copyDirectoryFromFixture($directory)
+    protected function copyDirectoryFromFixture($directory, $site = null)
     {
         if (base_path($directory)) {
             $this->files->deleteDirectory(base_path($directory));
         }
 
-        $this->files->copyDirectory("{$this->siteFixturePath}/{$directory}", base_path($directory));
+        $origin = vsprintf('%s/%s%s', [
+            $this->fixturePath,
+            $site ? "{$site}/" : '',
+            $directory,
+        ]);
+
+        $this->files->copyDirectory($origin, base_path($directory));
+    }
+
+    protected function copyDirectoryFromSiteFixture($directory)
+    {
+        $this->copyDirectoryFromFixture($directory, $this->siteFixture);
     }
 
     protected function resolveApplicationConfiguration($app)

@@ -10,7 +10,7 @@ class GenerateTest extends TestCase
 {
     use RunsGeneratorCommand;
 
-    protected $siteFixturePath = __DIR__.'/../Fixtures/site-localized';
+    protected $siteFixture = 'site-localized';
 
     protected function getEnvironmentSetUp($app)
     {
