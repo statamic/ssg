@@ -33,10 +33,10 @@ class Generator
     protected $config;
     protected $request;
     protected $after;
-    protected $fresh = false;
     protected $extraUrls;
     protected $workers = 1;
     protected $taskResults;
+    protected $disableClear = false;
 
     public function __construct(Application $app, Filesystem $files, Router $router, Tasks $tasks)
     {
@@ -66,13 +66,6 @@ class Generator
         return $this;
     }
 
-    public function fresh(bool $fresh = true)
-    {
-        $this->fresh = $fresh;
-
-        return $this;
-    }
-
     public function after($after)
     {
         $this->after = $after;
@@ -85,18 +78,22 @@ class Generator
         $this->extraUrls[] = $closure;
     }
 
+    public function disableClear(bool $disableClear = false)
+    {
+        $this->disableClear = $disableClear;
+
+        return $this;
+    }
+
     public function generate()
     {
         $this->checkConcurrencySupport();
 
         Site::setCurrent(Site::default()->handle());
 
-        if ($this->fresh) {
-            $this->clearDirectory();
-        }
-
         $this
             ->bindGlide()
+            ->clearDirectory()
             ->createContentFiles()
             ->createSymlinks()
             ->copyFiles()
@@ -139,6 +136,10 @@ class Generator
 
     public function clearDirectory()
     {
+        if ($this->disableClear) {
+            return $this;
+        }
+
         $this->files->deleteDirectory($this->config['destination'], true);
 
         return $this;

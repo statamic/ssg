@@ -22,7 +22,7 @@ class StaticSiteGenerate extends Command
      *
      * @var string
      */
-    protected $signature = 'statamic:ssg:generate {--workers=} {--fresh}';
+    protected $signature = 'statamic:ssg:generate {--workers=} {--disable-clear}';
 
     /**
      * The console command description.
@@ -59,7 +59,7 @@ class StaticSiteGenerate extends Command
         try {
             $this->generator
                 ->workers($workers ?? 1)
-                ->fresh($this->option('fresh') ?? false)
+                ->disableClear($this->option('disable-clear') ?? false)
                 ->generate();
         } catch (GenerationFailedException $e) {
             $this->line($e->getConsoleMessage());
