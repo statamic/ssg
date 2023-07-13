@@ -314,7 +314,9 @@ class Generator
     {
         $results = $this->taskResults;
 
-        Partyline::line("\x1B[1A\x1B[2K<info>[✔]</info> Generated {$results['count']} content files");
+        $successCount = $results['count'] - $results['errors']->count();
+
+        Partyline::line("\x1B[1A\x1B[2K<info>[✔]</info> Generated {$successCount} content files");
 
         $results['warnings']->merge($results['errors'])->each(fn ($error) => Partyline::line($error));
     }
