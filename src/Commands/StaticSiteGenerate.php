@@ -22,7 +22,9 @@ class StaticSiteGenerate extends Command
      *
      * @var string
      */
-    protected $signature = 'statamic:ssg:generate {--workers=} {--disable-clear}';
+    protected $signature = 'statamic:ssg:generate
+        {--workers= : Speed up site generation significantly by installing spatie/fork and using multiple workers }
+        {--disable-clear : Disable clearing the destination directory when generating whole site }';
 
     /**
      * The console command description.
