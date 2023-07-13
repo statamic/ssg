@@ -35,7 +35,23 @@ class GenerateTest extends TestCase
     {
         $files = $this->generate();
 
-        $this->assertCount(13, $files);
+        $expectedFiles = [
+            '404.html',
+            'index.html',
+            'about/index.html',
+            'topics/index.html',
+            'articles/index.html',
+            'articles/one/index.html',
+            'articles/two/index.html',
+            'articles/three/index.html',
+            'articles/four/index.html',
+            'articles/five/index.html',
+            'articles/six/index.html',
+            'articles/seven/index.html',
+            'articles/eight/index.html',
+        ];
+
+        $this->assertEqualsCanonicalizing($expectedFiles, array_keys($files));
 
         $this->assertStringContainsString('<h1>404!</h1>', $files['404.html']);
 
