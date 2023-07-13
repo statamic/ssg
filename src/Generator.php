@@ -91,8 +91,8 @@ class Generator
 
         Site::setCurrent(Site::default()->handle());
 
-        if ($urls) {
-            $this->disableClear = true; // TODO: Needs PR #136
+        if (is_array($urls)) {
+            $this->disableClear = true;
         }
 
         $this

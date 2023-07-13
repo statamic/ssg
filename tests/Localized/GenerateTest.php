@@ -2,6 +2,7 @@
 
 namespace Tests\Localized;
 
+use Illuminate\Filesystem\Filesystem;
 use Statamic\Facades\Config;
 use Tests\Concerns\RunsGeneratorCommand;
 use Tests\TestCase;
@@ -257,6 +258,12 @@ EOT
 {{ /collection:articles }}
 EOT
         );
+
+        $this
+            ->partialMock(Filesystem::class)
+            ->shouldReceive('deleteDirectory')
+            ->with(config('statamic.ssg.destination'), true)
+            ->never();
 
         $files = $this->generate(['urls' => ['fr/le-articles']]);
 
