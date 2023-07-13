@@ -4,6 +4,7 @@ namespace Tests;
 
 use Statamic\StaticSite\ConsecutiveTasks;
 use Statamic\StaticSite\Tasks;
+use Statamic\Support\Str;
 
 class GenerateTest extends TestCase
 {
@@ -73,6 +74,6 @@ class GenerateTest extends TestCase
 
     private function relativePath($path)
     {
-        return str_replace($this->destination.'/', '', $path);
+        return str_replace(Str::ensureRight($this->destination, DIRECTORY_SEPARATOR), '', $path);
     }
 }
