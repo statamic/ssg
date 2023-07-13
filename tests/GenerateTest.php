@@ -59,6 +59,24 @@ class GenerateTest extends TestCase
     }
 
     /** @test */
+    public function it_generates_specific_pages_when_passing_urls_as_args()
+    {
+        $files = $this->generate(['urls' => ['/', 'topics', 'articles']]);
+
+        $expectedFiles = [
+            'index.html',
+            'topics/index.html',
+            'articles/index.html',
+        ];
+
+        $this->assertEqualsCanonicalizing($expectedFiles, array_keys($files));
+
+        $this->assertStringContainsString('<h1>Page Title: Home</h1>', $files['index.html']);
+        $this->assertStringContainsString('<h1>Page Title: Topics</h1>', $files['topics/index.html']);
+        $this->assertStringContainsString('<h1>Articles Index Page Title</h1>', $files['articles/index.html']);
+    }
+
+    /** @test */
     public function it_generates_pages_to_custom_destination()
     {
         Config::set('statamic.ssg.destination', $this->destination = base_path('custom_export'));
@@ -230,5 +248,73 @@ EOT
         $this->assertStringContainsString('Current Page: 3', $index);
         $this->assertStringContainsString('Total Pages: 3', $index);
         $this->assertStringContainsString('Prev Link: /articles/p-2', $index);
+    }
+
+    /** @test */
+    public function it_generates_associated_paginated_pages_when_generating_only_urls_with_pagination()
+    {
+        $this->files->put(resource_path('views/articles/index.antlers.html'), <<<'EOT'
+{{ collection:articles sort="date:asc" paginate="3" as="articles" }}
+    {{ articles }}
+        <a href="{{ permalink }}">{{ title }}</a>
+    {{ /articles }}
+
+    {{ paginate }}
+        Current Page: {{ current_page }}
+        Total Pages: {{ total_pages }}
+        Prev Link: {{ prev_page }}
+        Next Link: {{ next_page }}
+    {{ /paginate }}
+{{ /collection:articles }}
+EOT
+        );
+
+        $files = $this->generate(['urls' => ['articles']]);
+
+        $expectedArticlesFiles = [
+            'articles/index.html',
+            'articles/page/1/index.html',
+            'articles/page/2/index.html',
+            'articles/page/3/index.html',
+        ];
+
+        $this->assertEqualsCanonicalizing($expectedArticlesFiles, array_keys($files));
+
+        // Index assertions on implicit page 1
+        $index = $files['articles/index.html'];
+        $this->assertStringContainsStrings(['One', 'Two', 'Three'], $index);
+        $this->assertStringNotContainsStrings(['Four', 'Five', 'Six'], $index);
+        $this->assertStringNotContainsStrings(['Seven', 'Eight'], $index);
+        $this->assertStringContainsString('Current Page: 1', $index);
+        $this->assertStringContainsString('Total Pages: 3', $index);
+        $this->assertStringContainsString('Next Link: /articles/page/2', $index);
+
+        // Index assertions on explicit page 1
+        $index = $files['articles/page/1/index.html'];
+        $this->assertStringContainsStrings(['One', 'Two', 'Three'], $index);
+        $this->assertStringNotContainsStrings(['Four', 'Five', 'Six'], $index);
+        $this->assertStringNotContainsStrings(['Seven', 'Eight'], $index);
+        $this->assertStringContainsString('Current Page: 1', $index);
+        $this->assertStringContainsString('Total Pages: 3', $index);
+        $this->assertStringContainsString('Next Link: /articles/page/2', $index);
+
+        // Index assertions on page 2
+        $index = $files['articles/page/2/index.html'];
+        $this->assertStringNotContainsStrings(['One', 'Two', 'Three'], $index);
+        $this->assertStringContainsStrings(['Four', 'Five', 'Six'], $index);
+        $this->assertStringNotContainsStrings(['Seven', 'Eight'], $index);
+        $this->assertStringContainsString('Current Page: 2', $index);
+        $this->assertStringContainsString('Total Pages: 3', $index);
+        $this->assertStringContainsString('Prev Link: /articles/page/1', $index);
+        $this->assertStringContainsString('Next Link: /articles/page/3', $index);
+
+        // Index assertions on page 3
+        $index = $files['articles/page/3/index.html'];
+        $this->assertStringNotContainsStrings(['One', 'Two', 'Three'], $index);
+        $this->assertStringNotContainsStrings(['Four', 'Five', 'Six'], $index);
+        $this->assertStringContainsStrings(['Seven', 'Eight'], $index);
+        $this->assertStringContainsString('Current Page: 3', $index);
+        $this->assertStringContainsString('Total Pages: 3', $index);
+        $this->assertStringContainsString('Prev Link: /articles/page/2', $index);
     }
 }
