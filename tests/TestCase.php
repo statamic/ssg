@@ -34,6 +34,8 @@ class TestCase extends OrchestraTestCase
 
         $this->copyDirectoryFromFixture('content');
         $this->copyDirectoryFromFixture('resources');
+
+        $this->app->instance('fork-installed', false);
     }
 
     protected function copyDirectoryFromFixture($directory)
