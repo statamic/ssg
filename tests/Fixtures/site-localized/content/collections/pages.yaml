@@ -1,0 +1,8 @@
+title: Pages
+sites:
+  - default
+  - french
+revisions: false
+route: '{parent_uri}/{slug}'
+structure:
+  root: true

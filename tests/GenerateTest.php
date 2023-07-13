@@ -3,32 +3,11 @@
 namespace Tests;
 
 use Statamic\Facades\Config;
-use Statamic\Facades\Path;
-use Statamic\StaticSite\ConsecutiveTasks;
-use Statamic\StaticSite\Tasks;
+use Tests\Concerns\RunsGeneratorCommand;
 
 class GenerateTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        // Force this test to use ConsecutiveTasks implementation.
-        // Because spatie/fork was mocked in an earlier test case,
-        // it can cause the suite to fail when it gets to this test.
-        $this->app->bind(Tasks::class, fn () => new ConsecutiveTasks);
-
-        $this->destination = storage_path('app/static');
-
-        $this->cleanUpDestination();
-    }
-
-    public function tearDown(): void
-    {
-        $this->cleanUpDestination();
-
-        parent::tearDown();
-    }
+    use RunsGeneratorCommand;
 
     /** @test */
     public function it_generates_pages_for_site_fixture()
@@ -251,58 +230,5 @@ EOT
         $this->assertStringContainsString('Current Page: 3', $index);
         $this->assertStringContainsString('Total Pages: 3', $index);
         $this->assertStringContainsString('Prev Link: /articles/p-2', $index);
-    }
-
-    private function generate()
-    {
-        $this->assertFalse($this->files->exists($this->destination));
-
-        $this
-            ->artisan('statamic:ssg:generate')
-            ->doesntExpectOutputToContain('pages not generated');
-
-        $this->assertTrue($this->files->exists($this->destination));
-
-        return $this->getGeneratedFilesAtPath($this->destination);
-    }
-
-    private function relativePath($path)
-    {
-        return str_replace(Path::tidy($this->destination.'/'), '', Path::tidy($path));
-    }
-
-    private function destinationPath($path)
-    {
-        return Path::tidy($this->destination.'/'.$path);
-    }
-
-    private function getGeneratedFilesAtPath($path)
-    {
-        return collect($this->files->allFiles($path))
-            ->mapWithKeys(fn ($file) => [$this->relativePath($file->getPathname()) => $file->getContents()])
-            ->all();
-    }
-
-    private function cleanUpDestination($destination = null)
-    {
-        $destination ??= $this->destination;
-
-        if ($this->files->exists($destination)) {
-            $this->files->deleteDirectory($destination);
-        }
-    }
-
-    private function assertStringContainsStrings($needleStrings, $haystackString)
-    {
-        foreach ($needleStrings as $string) {
-            $this->assertStringContainsString($string, $haystackString);
-        }
-    }
-
-    private function assertStringNotContainsStrings($needleStrings, $haystackString)
-    {
-        foreach ($needleStrings as $string) {
-            $this->assertStringNotContainsString($string, $haystackString);
-        }
     }
 }
