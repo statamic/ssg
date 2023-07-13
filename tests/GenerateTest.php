@@ -170,6 +170,89 @@ EOT
         $this->assertStringContainsString('Prev Link: /articles/page/2', $index);
     }
 
+    /** @test */
+    public function it_generates_pagination_with_custom_page_name_and_route()
+    {
+        // Here we'll override the `pagination_route`.
+        Config::set('statamic.ssg.pagination_route', '{url}/{page_name}-{page_number}');
+
+        // And we'll also use a custom `page_name` param.
+        // This could even be passed in as a translatable string if the user wants `page` in different languages, etc.
+        $this->files->put(resource_path('views/articles/index.antlers.html'), <<<'EOT'
+{{ collection:articles sort="date:asc" paginate="3" page_name="p" as="articles" }}
+    {{ articles }}
+        <a href="{{ permalink }}">{{ title }}</a>
+    {{ /articles }}
+
+    {{ paginate }}
+        Current Page: {{ current_page }}
+        Total Pages: {{ total_pages }}
+        Prev Link: {{ prev_page }}
+        Next Link: {{ next_page }}
+    {{ /paginate }}
+{{ /collection:articles }}
+EOT
+        );
+
+        $this->generate();
+
+        $files = $this->getGeneratedFilesAtPath($this->destinationPath('articles'));
+
+        $expectedArticlesFiles = [
+            'articles/index.html',
+            'articles/p-1/index.html',
+            'articles/p-2/index.html',
+            'articles/p-3/index.html',
+            'articles/one/index.html',
+            'articles/two/index.html',
+            'articles/three/index.html',
+            'articles/four/index.html',
+            'articles/five/index.html',
+            'articles/six/index.html',
+            'articles/seven/index.html',
+            'articles/eight/index.html',
+        ];
+
+        $this->assertEqualsCanonicalizing($expectedArticlesFiles, array_keys($files));
+
+        // Index assertions on implicit page 1
+        $index = $files['articles/index.html'];
+        $this->assertStringContainsStrings(['One', 'Two', 'Three'], $index);
+        $this->assertStringNotContainsStrings(['Four', 'Five', 'Six'], $index);
+        $this->assertStringNotContainsStrings(['Seven', 'Eight'], $index);
+        $this->assertStringContainsString('Current Page: 1', $index);
+        $this->assertStringContainsString('Total Pages: 3', $index);
+        $this->assertStringContainsString('Next Link: /articles/p-2', $index);
+
+        // Index assertions on explicit page 1
+        $index = $files['articles/p-1/index.html'];
+        $this->assertStringContainsStrings(['One', 'Two', 'Three'], $index);
+        $this->assertStringNotContainsStrings(['Four', 'Five', 'Six'], $index);
+        $this->assertStringNotContainsStrings(['Seven', 'Eight'], $index);
+        $this->assertStringContainsString('Current Page: 1', $index);
+        $this->assertStringContainsString('Total Pages: 3', $index);
+        $this->assertStringContainsString('Next Link: /articles/p-2', $index);
+
+        // Index assertions on page 2
+        $index = $files['articles/p-2/index.html'];
+        $this->assertStringNotContainsStrings(['One', 'Two', 'Three'], $index);
+        $this->assertStringContainsStrings(['Four', 'Five', 'Six'], $index);
+        $this->assertStringNotContainsStrings(['Seven', 'Eight'], $index);
+        $this->assertStringContainsString('Current Page: 2', $index);
+        $this->assertStringContainsString('Total Pages: 3', $index);
+        $this->assertStringContainsString('Prev Link: /articles/p-1', $index);
+        $this->assertStringContainsString('Next Link: /articles/p-3', $index);
+
+        // Index assertions on page 3
+        $index = $files['articles/p-3/index.html'];
+        $this->assertStringNotContainsStrings(['One', 'Two', 'Three'], $index);
+        $this->assertStringNotContainsStrings(['Four', 'Five', 'Six'], $index);
+        $this->assertStringContainsStrings(['Seven', 'Eight'], $index);
+        $this->assertStringContainsString('Current Page: 3', $index);
+        $this->assertStringContainsString('Total Pages: 3', $index);
+        $this->assertStringContainsString('Prev Link: /articles/p-2', $index);
+    }
+
     private function generate()
     {
         $this->assertFalse($this->files->exists($this->destination));
