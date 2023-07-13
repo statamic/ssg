@@ -75,6 +75,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Pagination Route
+    |--------------------------------------------------------------------------
+    |
+    | Here you may define how paginated entries are routed. This will take
+    | effect wherever pagination is detected in your antlers templates,
+    | like if you use the `paginate` param on the `collection` tag.
+    |
+    */
+
+    'pagination_route' => '{url}/{page_name}/{page_number}',
+
+    /*
+    |--------------------------------------------------------------------------
     | Glide
     |--------------------------------------------------------------------------
     |

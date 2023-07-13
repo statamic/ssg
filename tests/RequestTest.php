@@ -54,4 +54,18 @@ class RequestTest extends TestCase
 
         $this->assertEquals('foo', $request->path());
     }
+
+    /** @test */
+    public function it_can_forget_query_param()
+    {
+        $request = new Request;
+
+        $request->merge(['page' => 2]);
+
+        $this->assertEquals(['page' => 2], $request->all());
+
+        $request->forget('page');
+
+        $this->assertEquals([], $request->all());
+    }
 }
