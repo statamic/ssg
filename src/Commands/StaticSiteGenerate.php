@@ -22,7 +22,9 @@ class StaticSiteGenerate extends Command
      *
      * @var string
      */
-    protected $signature = 'statamic:ssg:generate {--workers=} {--url=*}';
+    protected $signature = 'statamic:ssg:generate
+        {urls?* : You may provide one or more explicit url arguments, otherwise whole site will be generated }
+        {--workers= : Speed up site generation significantly by installing spatie/fork and using multiple workers }';
 
     /**
      * The console command description.
@@ -59,8 +61,7 @@ class StaticSiteGenerate extends Command
         try {
             $this->generator
                 ->workers($workers ?? 1)
-                ->explicitUrls($this->option('url'))
-                ->generate();
+                ->generate($this->argument('urls') ?: '*');
         } catch (GenerationFailedException $e) {
             $this->line($e->getConsoleMessage());
             $this->error('Static site generation failed.');
