@@ -22,12 +22,12 @@ trait RunsGeneratorCommand
         parent::tearDown();
     }
 
-    protected function generate()
+    protected function generate($options = [])
     {
         $this->assertFalse($this->files->exists($this->destination));
 
         $this
-            ->artisan('statamic:ssg:generate')
+            ->artisan('statamic:ssg:generate', $options)
             ->doesntExpectOutputToContain('pages not generated');
 
         $this->assertTrue($this->files->exists($this->destination));
