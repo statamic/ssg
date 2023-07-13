@@ -36,6 +36,7 @@ class Generator
     protected $extraUrls;
     protected $workers = 1;
     protected $taskResults;
+    protected $disableClear = false;
 
     public function __construct(Application $app, Filesystem $files, Router $router, Tasks $tasks)
     {
@@ -75,6 +76,13 @@ class Generator
     public function addUrls($closure)
     {
         $this->extraUrls[] = $closure;
+    }
+
+    public function disableClear(bool $disableClear = false)
+    {
+        $this->disableClear = $disableClear;
+
+        return $this;
     }
 
     public function generate()
@@ -128,6 +136,10 @@ class Generator
 
     public function clearDirectory()
     {
+        if ($this->disableClear) {
+            return $this;
+        }
+
         $this->files->deleteDirectory($this->config['destination'], true);
 
         return $this;

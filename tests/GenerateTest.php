@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Illuminate\Filesystem\Filesystem;
 use Statamic\Facades\Config;
 use Tests\Concerns\RunsGeneratorCommand;
 
@@ -69,6 +70,30 @@ class GenerateTest extends TestCase
         $this->assertCount(13, $this->files->allFiles(base_path('custom_export')));
 
         $this->cleanUpDestination();
+    }
+
+    /** @test */
+    public function it_clears_destination_directory_when_generating_site()
+    {
+        $this
+            ->partialMock(Filesystem::class)
+            ->shouldReceive('deleteDirectory')
+            ->with(config('statamic.ssg.destination'), true)
+            ->once();
+
+        $this->generate();
+    }
+
+    /** @test */
+    public function it_can_generate_site_without_clearing_destination_directory()
+    {
+        $this
+            ->partialMock(Filesystem::class)
+            ->shouldReceive('deleteDirectory')
+            ->with(config('statamic.ssg.destination'), true)
+            ->never();
+
+        $this->generate(['--disable-clear' => true]);
     }
 
     /** @test */

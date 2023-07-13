@@ -2,6 +2,8 @@
 
 namespace Statamic\StaticSite;
 
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use Spatie\Fork\Fork;
 use Statamic\Extensions\Pagination\LengthAwarePaginator as StatamicLengthAwarePaginator;
@@ -19,7 +21,7 @@ class ServiceProvider extends LaravelServiceProvider
         });
 
         $this->app->singleton(Generator::class, function ($app) {
-            return new Generator($app, $app['files'], $app['router'], $app[Tasks::class]);
+            return new Generator($app, $app[Filesystem::class], $app[Router::class], $app[Tasks::class]);
         });
     }
 
