@@ -75,9 +75,8 @@ class GenerateTest extends TestCase
     /** @test */
     public function it_clears_destination_directory_when_generating_site()
     {
-        $files = $this->partialMock(Filesystem::class);
-
-        $files
+        $this
+            ->partialMock(Filesystem::class)
             ->shouldReceive('deleteDirectory')
             ->with(config('statamic.ssg.destination'), true)
             ->once();
@@ -88,9 +87,8 @@ class GenerateTest extends TestCase
     /** @test */
     public function it_can_generate_site_without_clearing_destination_directory()
     {
-        $files = $this->partialMock(Filesystem::class);
-
-        $files
+        $this
+            ->partialMock(Filesystem::class)
             ->shouldReceive('deleteDirectory')
             ->with(config('statamic.ssg.destination'), true)
             ->never();
