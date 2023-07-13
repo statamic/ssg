@@ -68,6 +68,7 @@ class GenerateTest extends TestCase
         $this->assertTrue($this->files->exists($this->destination));
 
         return collect($this->files->allFiles($this->destination))
+            ->each(fn ($file) => var_dump($file->getPathname()))
             ->mapWithKeys(fn ($file) => [$this->relativePath($file->getPathname()) => $file->getContents()])
             ->all();
     }
