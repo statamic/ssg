@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Statamic\Facades\Config;
 use Statamic\Facades\Path;
 use Statamic\StaticSite\ConsecutiveTasks;
 use Statamic\StaticSite\Tasks;
@@ -19,9 +20,14 @@ class GenerateTest extends TestCase
 
         $this->destination = storage_path('app/static');
 
-        if ($this->files->exists($this->destination)) {
-            $this->files->deleteDirectory($this->destination);
-        }
+        $this->cleanUpDestination();
+    }
+
+    public function tearDown(): void
+    {
+        $this->cleanUpDestination();
+
+        parent::tearDown();
     }
 
     /** @test */
@@ -57,6 +63,19 @@ class GenerateTest extends TestCase
         $this->assertStringContainsString('<h1>Article Title: Eight</h1>', $files['articles/eight/index.html']);
     }
 
+    /** @test */
+    public function it_generates_pages_to_custom_destination()
+    {
+        Config::set('statamic.ssg.destination', $this->destination = base_path('custom_export'));
+
+        $this->generate();
+
+        $this->assertFalse($this->files->exists(storage_path('app/static')));
+        $this->assertCount(13, $this->files->allFiles(base_path('custom_export')));
+
+        $this->cleanUpDestination();
+    }
+
     private function generate()
     {
         $this->assertFalse($this->files->exists($this->destination));
@@ -75,5 +94,14 @@ class GenerateTest extends TestCase
     private function relativePath($path)
     {
         return str_replace(Path::tidy($this->destination.'/'), '', Path::tidy($path));
+    }
+
+    private function cleanUpDestination($destination = null)
+    {
+        $destination ??= $this->destination;
+
+        if ($this->files->exists($destination)) {
+            $this->files->deleteDirectory($destination);
+        }
     }
 }
