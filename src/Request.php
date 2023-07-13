@@ -61,4 +61,11 @@ class Request extends \Illuminate\Http\Request
 
         return ltrim($path, '/');
     }
+
+    public function forget(string $inputKey)
+    {
+        $this->getInputSource()->remove($inputKey);
+
+        return $this;
+    }
 }
