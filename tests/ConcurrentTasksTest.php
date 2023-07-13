@@ -7,7 +7,13 @@ use Statamic\StaticSite\ConcurrentTasks;
 
 class ConcurrentTasksTest extends TestCase
 {
-    /** @test */
+    /**
+     * @test
+     *
+     * @runInSeparateProcess
+     *
+     * @preserveGlobalState disabled
+     */
     public function it_runs_callbacks()
     {
         $one = function () {

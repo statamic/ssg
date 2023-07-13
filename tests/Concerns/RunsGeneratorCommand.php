@@ -3,19 +3,12 @@
 namespace Tests\Concerns;
 
 use Statamic\Facades\Path;
-use Statamic\StaticSite\ConsecutiveTasks;
-use Statamic\StaticSite\Tasks;
 
 trait RunsGeneratorCommand
 {
     protected function setUp(): void
     {
         parent::setUp();
-
-        // Force this test to use ConsecutiveTasks implementation.
-        // Because spatie/fork was mocked in an earlier test case,
-        // it can cause the suite to fail when it gets to this test.
-        $this->app->bind(Tasks::class, fn () => new ConsecutiveTasks);
 
         $this->destination = storage_path('app/static');
 
