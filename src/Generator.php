@@ -3,27 +3,26 @@
 namespace Statamic\StaticSite;
 
 use Carbon\Carbon;
-use Spatie\Fork\Fork;
-use Statamic\Statamic;
 use Facades\Statamic\View\Cascade;
-use Statamic\Facades\URL;
-use Statamic\Support\Str;
-use Statamic\Facades\Site;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Arr;
+use League\Flysystem\Filesystem as Flysystem;
+use Spatie\Fork\Fork;
+use Statamic\Contracts\Imaging\UrlBuilder;
 use Statamic\Facades\Collection;
 use Statamic\Facades\Entry;
 use Statamic\Facades\Glide;
+use Statamic\Facades\Site;
 use Statamic\Facades\Term;
-use League\Flysystem\Adapter\Local;
-use Statamic\Imaging\ImageGenerator;
-use Illuminate\Filesystem\Filesystem;
-use Statamic\Imaging\StaticUrlBuilder;
-use Statamic\Contracts\Imaging\UrlBuilder;
-use League\Flysystem\Filesystem as Flysystem;
-use Wilderborn\Partyline\Facade as Partyline;
-use Illuminate\Contracts\Foundation\Application;
+use Statamic\Facades\URL;
 use Statamic\Http\Controllers\FrontendController;
+use Statamic\Imaging\ImageGenerator;
+use Statamic\Imaging\StaticUrlBuilder;
+use Statamic\Statamic;
+use Statamic\Support\Str;
+use Wilderborn\Partyline\Facade as Partyline;
 
 class Generator
 {
@@ -134,12 +133,12 @@ class Generator
             : '\League\Flysystem\Local\LocalFilesystemAdapter';
 
         $this->app['League\Glide\Server']->setCache(
-            new Flysystem(new $localAdapter($this->config['destination'] . '/' . $directory))
+            new Flysystem(new $localAdapter($this->config['destination'].'/'.$directory))
         );
 
         $this->app->bind(UrlBuilder::class, function () use ($directory) {
             return new StaticUrlBuilder($this->app[ImageGenerator::class], [
-                'route' => URL::tidy($this->config['base_url'] . '/' . $directory)
+                'route' => URL::tidy($this->config['base_url'].'/'.$directory),
             ]);
         });
 
@@ -156,7 +155,7 @@ class Generator
     public function createSymlinks()
     {
         foreach ($this->config['symlinks'] as $source => $dest) {
-            $dest = $this->config['destination'] . '/' . $dest;
+            $dest = $this->config['destination'].'/'.$dest;
 
             if ($this->files->exists($dest)) {
                 Partyline::line("Symlink not created. $dest already exists.");
@@ -172,7 +171,7 @@ class Generator
     public function copyFiles()
     {
         foreach ($this->config['copy'] ?? [] as $source => $dest) {
-            $dest = $this->config['destination'] . '/' . $dest;
+            $dest = $this->config['destination'].'/'.$dest;
 
             if (is_file($source)) {
                 $this->files->copy($source, $dest);
@@ -285,7 +284,9 @@ class Generator
             ->reject(function ($page) {
                 foreach ($this->config['exclude'] as $url) {
                     if (Str::endsWith($url, '*')) {
-                        if (Str::is($url, $page->url())) return true;
+                        if (Str::is($url, $page->url())) {
+                            return true;
+                        }
                     }
                 }
 
@@ -325,6 +326,7 @@ class Generator
                         }
 
                         $errors[] = $e->consoleMessage();
+
                         continue;
                     } finally {
                         Carbon::setToStringFormat($oldCarbonFormat);
@@ -356,7 +358,7 @@ class Generator
     protected function outputSummary()
     {
         Partyline::info('');
-        Partyline::info('Static site generated into ' . $this->config['destination']);
+        Partyline::info('Static site generated into '.$this->config['destination']);
 
         $total = $this->taskResults['count'];
 
@@ -429,6 +431,7 @@ class Generator
 
         return collect($this->config['urls'] ?? [])->merge($extra)->map(function ($url) {
             $url = URL::tidy(Str::start($url, $this->config['base_url'].'/'));
+
             return $this->createPage(new Route($url));
         });
     }
@@ -440,6 +443,7 @@ class Generator
                 && ! Str::contains($route->uri(), '{');
         })->map(function ($route) {
             $url = URL::tidy(Str::start($route->uri(), $this->config['base_url'].'/'));
+
             return $this->createPage(new StatamicRoute($url));
         });
     }

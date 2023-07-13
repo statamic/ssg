@@ -3,7 +3,6 @@
 namespace Tests;
 
 use Illuminate\Filesystem\Filesystem;
-use Mockery;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\StaticSite\Page;
 

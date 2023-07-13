@@ -2,9 +2,8 @@
 
 namespace Statamic\StaticSite;
 
-use Spatie\Fork\Fork;
-use Statamic\StaticSite\Generator;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
+use Spatie\Fork\Fork;
 
 class ServiceProvider extends LaravelServiceProvider
 {
