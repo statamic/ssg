@@ -63,7 +63,7 @@ You can also exclude single routes, or route groups with wildcards. This will ov
 ],
 ```
 
-### Dynamically adding routes
+### Dynamic Routes
 
 You may add URLs dynamically by providing a closure that returns an array to the `addUrls` method.
 
@@ -80,6 +80,16 @@ class AppServiceProvider extends Provider
     }
 }
 ```
+
+### Pagination Routes
+
+Wherever pagination is detected in your antlers templates (eg. if you use the `paginate` param on the `collection` tag), multiple pages will automatically be generated with `/articles/page/2` style urls.
+
+You may configure a custom routing style in `config/statamic/ssg.php`:
+
+```php
+'pagination_route' => '{url}/{page_name}/{page_number}',
+``` 
 
 
 ## Post-generation callback

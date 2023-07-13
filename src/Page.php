@@ -6,12 +6,15 @@ use Exception;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\RedirectResponse;
+use Statamic\Facades\Blink;
 
 class Page
 {
     protected $files;
     protected $config;
     protected $content;
+    protected $paginationPageName;
+    protected $paginationCurrentPage;
 
     public function __construct(Filesystem $files, array $config, $content)
     {
@@ -33,14 +36,24 @@ class Page
     public function generate($request)
     {
         try {
-            return $this->write($request);
+            $generatedPage = $this->write($request);
         } catch (Exception $e) {
             throw new NotGeneratedException($this, $e);
         }
+
+        if ($paginator = $this->detectPaginator($request)) {
+            $this->writePaginatedPages($request, $paginator);
+        }
+
+        return $generatedPage;
     }
 
     protected function write($request)
     {
+        if ($this->paginationPageName) {
+            $request->merge([$this->paginationPageName => $this->paginationCurrentPage]);
+        }
+
         try {
             $response = $this->content->toResponse($request);
         } catch (HttpResponseException $e) {
@@ -57,6 +70,23 @@ class Page
         $this->files->put($this->path(), $html);
 
         return new GeneratedPage($this, $response);
+    }
+
+    protected function writePaginatedPages($request, $paginator)
+    {
+        collect(range(1, $paginator->lastPage()))->each(function ($pageNumber) use ($request) {
+            $page = clone $this;
+
+            try {
+                $page
+                    ->setPaginationCurrentPage($pageNumber)
+                    ->write($request);
+            } catch (Exception $e) {
+                throw new NotGeneratedException($page, $e);
+            }
+        });
+
+        $this->clearPaginator($request);
     }
 
     public function directory()
@@ -85,7 +115,17 @@ class Page
 
     public function url()
     {
-        return $this->content->urlWithoutRedirect();
+        $url = $this->content->urlWithoutRedirect();
+
+        if ($this->paginationCurrentPage) {
+            $url = LengthAwarePaginator::generatePaginatedUrl(
+                $url,
+                $this->paginationPageName,
+                $this->paginationCurrentPage
+            );
+        }
+
+        return $url;
     }
 
     public function site()
@@ -96,5 +136,32 @@ class Page
     public function is404()
     {
         return $this->url() === '/404';
+    }
+
+    public function setPaginationCurrentPage($currentPage)
+    {
+        $this->paginationCurrentPage = $currentPage;
+
+        return $this;
+    }
+
+    protected function detectPaginator($request)
+    {
+        if ($paginator = Blink::get('tag-paginator')) {
+            $this->paginationPageName = $paginator->getPageName();
+        }
+
+        $this->clearPaginator($request);
+
+        return $paginator;
+    }
+
+    protected function clearPaginator($request)
+    {
+        Blink::forget('tag-paginator');
+
+        if ($this->paginationPageName) {
+            $request->forget($this->paginationPageName);
+        }
     }
 }
