@@ -35,6 +35,7 @@ class Generator
     protected $after;
     protected $extraUrls;
     protected $workers = 1;
+    protected $earlyTaskErrors = [];
     protected $taskResults;
     protected $disableClear = false;
 
@@ -219,9 +220,9 @@ class Generator
         $results = collect($results);
 
         return [
-            'count' => $results->sum('count'),
+            'count' => count($this->earlyTaskErrors) + $results->sum('count'),
             'warnings' => $results->flatMap->warnings,
-            'errors' => $results->flatMap->errors,
+            'errors' => collect($this->earlyTaskErrors)->merge($results->flatMap->errors),
         ];
     }
 
@@ -459,7 +460,7 @@ class Generator
         return URL::tidy(Str::start($url, $this->config['base_url'].'/'));
     }
 
-    protected function shouldRejectPage($page, $throw = false)
+    protected function shouldRejectPage($page, $outputError = false)
     {
         foreach ($this->config['exclude'] as $url) {
             if (Str::endsWith($url, '*')) {
@@ -471,10 +472,8 @@ class Generator
 
         $excluded = in_array($page->url(), $this->config['exclude']);
 
-        if ($excluded && $throw) {
-            throw GenerationFailedException::withConsoleMessage(
-                $page->url().' is configured to be excluded in [config/statamic/ssg.php]'
-            );
+        if ($excluded && $outputError) {
+            $this->earlyTaskErrors[] = '<fg=red>[✘]</> '.URL::makeRelative($page->url()).' (Excluded in config/statamic/ssg.php)';
         }
 
         return $excluded;
