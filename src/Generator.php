@@ -192,6 +192,10 @@ class Generator
 
         $pages = $this->gatherContent($urls);
 
+        if (app('fork-installed')) {
+            $pages = $pages->shuffle();
+        }
+
         Partyline::line("Generating {$pages->count()} content files...");
 
         $closures = $this->makeContentGenerationClosures($pages, $request);
@@ -253,8 +257,7 @@ class Generator
             ->values()
             ->unique
             ->url()
-            ->reject(fn ($page) => $this->shouldRejectPage($page))
-            ->shuffle();
+            ->reject(fn ($page) => $this->shouldRejectPage($page));
     }
 
     protected function makeContentGenerationClosures($pages, $request)
