@@ -13,11 +13,13 @@ class ConsecutiveTasksTest extends TestCase
 
         $one = function () use (&$callbacksRan) {
             $callbacksRan++;
+
             return 'one';
         };
 
         $two = function () use (&$callbacksRan) {
             $callbacksRan++;
+
             return 'two';
         };
 
