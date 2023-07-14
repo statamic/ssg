@@ -9,7 +9,6 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Arr;
 use League\Flysystem\Filesystem as Flysystem;
-use Spatie\Fork\Fork;
 use Statamic\Contracts\Imaging\UrlBuilder;
 use Statamic\Facades\Collection;
 use Statamic\Facades\Entry;
@@ -433,7 +432,7 @@ class Generator
 
     protected function checkConcurrencySupport()
     {
-        if ($this->workers === 1 || class_exists(Fork::class)) {
+        if ($this->workers === 1 || app('fork-installed')) {
             return;
         }
 
