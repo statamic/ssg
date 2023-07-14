@@ -2,6 +2,7 @@
 
 namespace Tests\Localized;
 
+use Illuminate\Filesystem\Filesystem;
 use Statamic\Facades\Config;
 use Tests\Concerns\RunsGeneratorCommand;
 use Tests\TestCase;
@@ -237,5 +238,65 @@ EOT
         $this->assertStringContainsString('Current Page: 2', $index);
         $this->assertStringContainsString('Total Pages: 2', $index);
         $this->assertStringContainsString('Prev Link: /fr/le-articles/p-1', $index);
+    }
+
+    /** @test */
+    public function it_generates_associated_paginated_pages_when_generating_only_localized_urls_with_pagination()
+    {
+        $this->files->put(resource_path('views/articles/index.antlers.html'), <<<'EOT'
+{{ collection:articles sort="date:asc" paginate="3" as="articles" }}
+    {{ articles }}
+        <a href="{{ permalink }}">{{ title }}</a>
+    {{ /articles }}
+
+    {{ paginate }}
+        Current Page: {{ current_page }}
+        Total Pages: {{ total_pages }}
+        Prev Link: {{ prev_page }}
+        Next Link: {{ next_page }}
+    {{ /paginate }}
+{{ /collection:articles }}
+EOT
+        );
+
+        $this
+            ->partialMock(Filesystem::class)
+            ->shouldReceive('deleteDirectory')
+            ->with(config('statamic.ssg.destination'), true)
+            ->never();
+
+        $files = $this->generate(['urls' => ['fr/le-articles']]);
+
+        $expectedArticlesFiles = [
+            'fr/le-articles/index.html',
+            'fr/le-articles/page/1/index.html',
+            'fr/le-articles/page/2/index.html',
+        ];
+
+        $this->assertEqualsCanonicalizing($expectedArticlesFiles, array_keys($files));
+
+        // Index assertions on implicit page 1
+        $index = $files['fr/le-articles/index.html'];
+        $this->assertStringContainsStrings(['Le One', 'Le Two', 'Le Three'], $index);
+        $this->assertStringNotContainsStrings(['Le Four', 'Le Five'], $index);
+        $this->assertStringContainsString('Current Page: 1', $index);
+        $this->assertStringContainsString('Total Pages: 2', $index);
+        $this->assertStringContainsString('Next Link: /fr/le-articles/page/2', $index);
+
+        // Index assertions on explicit page 1
+        $index = $files['fr/le-articles/page/1/index.html'];
+        $this->assertStringContainsStrings(['Le One', 'Le Two', 'Le Three'], $index);
+        $this->assertStringNotContainsStrings(['Le Four', 'Le Five'], $index);
+        $this->assertStringContainsString('Current Page: 1', $index);
+        $this->assertStringContainsString('Total Pages: 2', $index);
+        $this->assertStringContainsString('Next Link: /fr/le-articles/page/2', $index);
+
+        // Index assertions on page 2
+        $index = $files['fr/le-articles/page/2/index.html'];
+        $this->assertStringNotContainsStrings(['Le One', 'Le Two', 'Le Three'], $index);
+        $this->assertStringContainsStrings(['Le Four', 'Le Five'], $index);
+        $this->assertStringContainsString('Current Page: 2', $index);
+        $this->assertStringContainsString('Total Pages: 2', $index);
+        $this->assertStringContainsString('Prev Link: /fr/le-articles/page/1', $index);
     }
 }

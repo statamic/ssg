@@ -35,6 +35,7 @@ class Generator
     protected $after;
     protected $extraUrls;
     protected $workers = 1;
+    protected $earlyTaskErrors = [];
     protected $taskResults;
     protected $disableClear = false;
 
@@ -85,16 +86,20 @@ class Generator
         return $this;
     }
 
-    public function generate()
+    public function generate($urls = '*')
     {
         $this->checkConcurrencySupport();
 
         Site::setCurrent(Site::default()->handle());
 
+        if (is_array($urls)) {
+            $this->disableClear = true;
+        }
+
         $this
             ->bindGlide()
             ->clearDirectory()
-            ->createContentFiles()
+            ->createContentFiles($urls)
             ->createSymlinks()
             ->copyFiles()
             ->outputSummary();
@@ -178,7 +183,7 @@ class Generator
         return $this;
     }
 
-    protected function createContentFiles()
+    protected function createContentFiles($urls = '*')
     {
         $request = tap(Request::capture(), function ($request) {
             $request->setConfig($this->config);
@@ -186,7 +191,7 @@ class Generator
             Cascade::withRequest($request);
         });
 
-        $pages = $this->gatherContent();
+        $pages = $this->gatherContent($urls);
 
         Partyline::line("Generating {$pages->count()} content files...");
 
@@ -215,24 +220,30 @@ class Generator
         $results = collect($results);
 
         return [
-            'count' => $results->sum('count'),
+            'count' => count($this->earlyTaskErrors) + $results->sum('count'),
             'warnings' => $results->flatMap->warnings,
-            'errors' => $results->flatMap->errors,
+            'errors' => collect($this->earlyTaskErrors)->merge($results->flatMap->errors),
         ];
     }
 
-    protected function gatherContent()
+    protected function gatherContent($urls = '*')
     {
+        if (is_array($urls)) {
+            return collect($urls)
+                ->map(fn ($url) => $this->createPage(new Route($this->makeAbsoluteUrl($url))))
+                ->reject(fn ($page) => $this->shouldRejectPage($page, true));
+        }
+
         Partyline::line('Gathering content to be generated...');
 
-        $pages = $this->pages();
+        $pages = $this->gatherAllPages();
 
         Partyline::line("\x1B[1A\x1B[2K<info>[✔]</info> Gathered content to be generated");
 
         return $pages;
     }
 
-    protected function pages()
+    protected function gatherAllPages()
     {
         return collect()
             ->merge($this->routes())
@@ -241,18 +252,10 @@ class Generator
             ->merge($this->terms())
             ->merge($this->scopedTerms())
             ->values()
-            ->unique->url()
-            ->reject(function ($page) {
-                foreach ($this->config['exclude'] as $url) {
-                    if (Str::endsWith($url, '*')) {
-                        if (Str::is($url, $page->url())) {
-                            return true;
-                        }
-                    }
-                }
-
-                return in_array($page->url(), $this->config['exclude']);
-            })->shuffle();
+            ->unique
+            ->url()
+            ->reject(fn ($page) => $this->shouldRejectPage($page))
+            ->shuffle();
     }
 
     protected function makeContentGenerationClosures($pages, $request)
@@ -311,7 +314,9 @@ class Generator
     {
         $results = $this->taskResults;
 
-        Partyline::line("\x1B[1A\x1B[2K<info>[✔]</info> Generated {$results['count']} content files");
+        $successCount = $results['count'] - $results['errors']->count();
+
+        Partyline::line("\x1B[1A\x1B[2K<info>[✔]</info> Generated {$successCount} content files");
 
         $results['warnings']->merge($results['errors'])->each(fn ($error) => Partyline::line($error));
     }
@@ -390,11 +395,9 @@ class Generator
             $extra[] = '/404';
         }
 
-        return collect($this->config['urls'] ?? [])->merge($extra)->map(function ($url) {
-            $url = URL::tidy(Str::start($url, $this->config['base_url'].'/'));
-
-            return $this->createPage(new Route($url));
-        });
+        return collect($this->config['urls'] ?? [])
+            ->merge($extra)
+            ->map(fn ($url) => $this->createPage(new Route($this->makeAbsoluteUrl($url))));
     }
 
     protected function routes()
@@ -452,5 +455,29 @@ class Generator
         return $content instanceof \Statamic\Contracts\Entries\Entry
             || $content instanceof \Statamic\Contracts\Taxonomies\Term
             || $content instanceof StatamicRoute;
+    }
+
+    protected function makeAbsoluteUrl($url)
+    {
+        return URL::tidy(Str::start($url, $this->config['base_url'].'/'));
+    }
+
+    protected function shouldRejectPage($page, $outputError = false)
+    {
+        foreach ($this->config['exclude'] as $url) {
+            if (Str::endsWith($url, '*')) {
+                if (Str::is($url, $page->url())) {
+                    return true;
+                }
+            }
+        }
+
+        $excluded = in_array($page->url(), $this->config['exclude']);
+
+        if ($excluded && $outputError) {
+            $this->earlyTaskErrors[] = '<fg=red>[✘]</> '.URL::makeRelative($page->url()).' (Excluded in config/statamic/ssg.php)';
+        }
+
+        return $excluded;
     }
 }
