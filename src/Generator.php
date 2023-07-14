@@ -193,7 +193,7 @@ class Generator
 
         $pages = $this->gatherContent($urls);
 
-        if (app('fork-installed')) {
+        if (app('fork-installed') && $this->workers > 1) {
             $pages = $pages->shuffle();
         }
 
