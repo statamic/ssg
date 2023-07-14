@@ -9,7 +9,6 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Arr;
 use League\Flysystem\Filesystem as Flysystem;
-use Spatie\Fork\Fork;
 use Statamic\Contracts\Imaging\UrlBuilder;
 use Statamic\Facades\Collection;
 use Statamic\Facades\Entry;
@@ -193,6 +192,10 @@ class Generator
 
         $pages = $this->gatherContent($urls);
 
+        if (app('fork-installed') && $this->workers > 1) {
+            $pages = $pages->shuffle();
+        }
+
         Partyline::line("Generating {$pages->count()} content files...");
 
         $closures = $this->makeContentGenerationClosures($pages, $request);
@@ -254,8 +257,7 @@ class Generator
             ->values()
             ->unique
             ->url()
-            ->reject(fn ($page) => $this->shouldRejectPage($page))
-            ->shuffle();
+            ->reject(fn ($page) => $this->shouldRejectPage($page));
     }
 
     protected function makeContentGenerationClosures($pages, $request)
@@ -430,7 +432,7 @@ class Generator
 
     protected function checkConcurrencySupport()
     {
-        if ($this->workers === 1 || class_exists(Fork::class)) {
+        if ($this->workers === 1 || app('fork-installed')) {
             return;
         }
 
