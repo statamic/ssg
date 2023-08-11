@@ -26,6 +26,8 @@ trait RunsGeneratorCommand
     {
         $this->assertFalse($this->files->exists($this->destination));
 
+        $options['--no-interaction'] ??= true;
+
         $this
             ->artisan('statamic:ssg:generate', $options)
             ->doesntExpectOutputToContain('pages not generated');
