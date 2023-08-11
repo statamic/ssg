@@ -55,6 +55,17 @@ class StaticSiteGenerate extends Command
     {
         Partyline::bind($this);
 
+        if (config('statamic.editions.pro') && ! config('statamic.system.license_key')) {
+            $this->error('Statamic Pro is enabled but no site key was found.');
+            $this->warn('Please set a valid site key in your .env file.');
+
+            if (! $this->confirm('Do you wish to continue with the ssg:generate command?', true)) {
+                $this->line('Static site generation canceled.');
+
+                return 0;
+            };
+        }
+
         if (! $workers = $this->option('workers')) {
             $this->comment('You may be able to speed up site generation significantly by installing spatie/fork and using multiple workers (requires PHP 8+).');
         }
