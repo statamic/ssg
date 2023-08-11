@@ -63,7 +63,7 @@ class StaticSiteGenerate extends Command
                 $this->line('Static site generation canceled.');
 
                 return 0;
-            };
+            }
         }
 
         if (! $workers = $this->option('workers')) {
