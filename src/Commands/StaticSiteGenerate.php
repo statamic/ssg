@@ -59,7 +59,7 @@ class StaticSiteGenerate extends Command
             $this->error('Statamic Pro is enabled but no site key was found.');
             $this->warn('Please set a valid site key in your .env file.');
 
-            if (! $this->confirm('Do you wish to continue with the ssg:generate command?', true)) {
+            if (! $this->confirm('Do you wish to continue with the ssg:generate command?', $this->option('no-interaction'))) {
                 $this->line('Static site generation canceled.');
 
                 return 0;
