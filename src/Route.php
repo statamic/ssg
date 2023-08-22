@@ -32,6 +32,10 @@ class Route
 
     public function toResponse($request)
     {
+        if (is_null($request->ip())) {
+            $request->server->add(['REMOTE_ADDR' => '0.0.0.0']);
+        }
+
         $kernel = app(Kernel::class);
         $response = $kernel->handle($request);
         $kernel->terminate($request, $response);
