@@ -9,6 +9,7 @@ use Statamic\Console\RunsInPlease;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
+
 use function Termwind\terminal;
 
 class StaticSiteServe extends Command
