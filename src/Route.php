@@ -33,7 +33,7 @@ class Route
     public function toResponse($request)
     {
         $this->checkIpAddress($request);
-        
+
         $kernel = app(Kernel::class);
         $response = $kernel->handle($request);
         $kernel->terminate($request, $response);
@@ -48,7 +48,7 @@ class Route
 
         return $response;
     }
-    
+
     private function checkIpAddress(&$request)
     {
         if (! is_null($request->ip())) {
