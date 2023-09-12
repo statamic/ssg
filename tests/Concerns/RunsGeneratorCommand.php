@@ -33,7 +33,7 @@ trait RunsGeneratorCommand
             ->doesntExpectOutputToContain('pages not generated');
 
         $this->assertTrue($this->files->exists($this->destination));
-        
+
         $this->assertTrue(app('config')->get('statamic.ssg.running'));
 
         return $this->getGeneratedFilesAtPath($this->destination);
