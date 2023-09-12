@@ -91,6 +91,17 @@ You may configure a custom routing style in `config/statamic/ssg.php`:
 'pagination_route' => '{url}/{page_name}/{page_number}',
 ``` 
 
+## Views
+
+You can tell if the SSG was running from your templates by using the following check.
+
+This is antlers, but the same principle will work for any conditional checking the `statamic.ssg.running` config key:
+
+```
+{{ if ! config:statamic:ssg:running }}
+    <meta name="csrf-token" content="{{ csrf_token }}">
+{{ /if }}
+```
 
 ## Post-generation callback
 
