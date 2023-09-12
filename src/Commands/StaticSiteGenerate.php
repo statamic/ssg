@@ -55,6 +55,8 @@ class StaticSiteGenerate extends Command
     {
         Partyline::bind($this);
 
+        config(['statamic.ssg.running' => true]);
+
         if (config('statamic.editions.pro') && ! config('statamic.system.license_key')) {
             $this->error('Statamic Pro is enabled but no site license was found.');
             $this->warn('Please set a valid Statamic License Key in your .env file.');
