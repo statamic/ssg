@@ -8,6 +8,7 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
 use League\Flysystem\Filesystem as Flysystem;
 use Statamic\Contracts\Imaging\UrlBuilder;
 use Statamic\Facades\Collection;
@@ -248,16 +249,37 @@ class Generator
 
     protected function gatherAllPages()
     {
-        return collect()
+        $pages = collect()
             ->merge($this->routes())
             ->merge($this->urls())
             ->merge($this->entries())
             ->merge($this->terms())
             ->merge($this->scopedTerms())
-            ->values()
-            ->unique
-            ->url()
-            ->reject(fn ($page) => $this->shouldRejectPage($page));
+            ->values();
+
+        $closures = $this->makeCachePagesClosures($pages);
+
+        $results = $this->tasks->run(...$closures);
+
+        return collect($results)->flatMap(function ($key) {
+            return Cache::pull($key);
+        })->unique->url();
+    }
+
+    protected function makeCachePagesClosures($pages)
+    {
+        return $pages->split($this->workers)->map(function ($pages, $key) {
+            return function () use ($pages, $key) {
+                $cacheKey = "ssg::pages::{$key}";
+
+                $pages = $pages
+                    ->reject(fn ($page) => $this->shouldRejectPage($page));
+
+                Cache::put($cacheKey, $pages);
+
+                return $cacheKey;
+            };
+        });
     }
 
     protected function makeContentGenerationClosures($pages, $request)
@@ -342,9 +364,6 @@ class Generator
     protected function entries()
     {
         return Entry::all()
-            ->reject(function ($entry) {
-                return is_null($entry->uri());
-            })
             ->map(function ($content) {
                 return $this->createPage($content);
             })
@@ -466,6 +485,10 @@ class Generator
 
     protected function shouldRejectPage($page, $outputError = false)
     {
+        if (is_null($page->url())) {
+            return true;
+        }
+
         foreach ($this->config['exclude'] as $url) {
             if (Str::endsWith($url, '*')) {
                 if (Str::is($url, $page->url())) {

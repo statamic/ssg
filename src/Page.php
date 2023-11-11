@@ -15,12 +15,14 @@ class Page
     protected $content;
     protected $paginationPageName;
     protected $paginationCurrentPage;
+    protected $url;
 
     public function __construct(Filesystem $files, array $config, $content)
     {
         $this->files = $files;
         $this->config = $config;
         $this->content = $content;
+        $this->url = null;
     }
 
     public function content()
@@ -115,6 +117,10 @@ class Page
 
     public function url()
     {
+        if ($this->url !== null) {
+            return $this->url;
+        }
+
         $url = $this->content->urlWithoutRedirect();
 
         if ($this->paginationCurrentPage) {
@@ -125,7 +131,9 @@ class Page
             );
         }
 
-        return $url;
+        $this->url = $url;
+
+        return $this->url;
     }
 
     public function site()
