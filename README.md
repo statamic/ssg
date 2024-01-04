@@ -208,30 +208,35 @@ Be sure to also update these in your `s3` disk configuration:
 ### Deploy to [Vercel](https://vercel.com)
 
 Deployments are triggered by committing to Git and pushing to GitHub.
-
-- Create a new file called `./build.sh` and paste the code snippet below.
-- Run `chmod +x build.sh` on your terminal to make sure the file can be executed when deploying.
+- Back in your project, create a new file at root level called `./build.sh`, and paste the code snippet below.
+- Run `chmod +x build.sh` on your terminal to make sure the file can be executed when deploying to Vercel.
+- Push a commit to your repo including the `build.sh` file.
 - Import a new site in your [Vercel](https://vercel.com) account
 - Link the site to your desired GitHub repository
-- Add build command `./build.sh`
-- Set output directory to `storage/app/static`
-- Add environment variable in your project settings: `APP_KEY` `<copy & paste from dev>`
-
+- In Project Settings:
+  - Set Build Command to `./build.sh`
+  - Set Output Directory to `storage/app/static`
+  - Set Node.js Version to `18.x`
+- In Environment Variables
+  - Set `APP_KEY`: `<copy & paste from env or run php artisan key:generate on the terminal to generate a new one>`. Save, edit it and set the value to "Secret".
+  - Set `APP_ENV`: `production` **(Optional)** 
+  - Set `APP_NAME`: `<copy & paste from env>` **(Optional)**
+  - Set `APP_URL`: `<your production url>` **(Optional)** 
 #### Code for build.sh
 Add the following snippet to `build.sh` file to install PHP, Composer, and run the `ssg:generate` command:
 
-```
+```sh
 #!/bin/sh
 
-# Install PHP & WGET
+# Install PHP
+yum update
 yum install -y amazon-linux-extras
-amazon-linux-extras enable php7.4
+amazon-linux-extras enable php8.2
 yum clean metadata
-yum install php php-{common,curl,mbstring,gd,gettext,bcmath,json,xml,fpm,intl,zip,imap}
-yum install wget
+yum install php php-{common,curl,mbstring,gd,gettext,bcmath,json,xml,fpm,intl,zip}
 
 # INSTALL COMPOSER
-EXPECTED_CHECKSUM="$(wget -q -O - https://composer.github.io/installer.sig)"
+EXPECTED_CHECKSUM="$(php -r 'copy("https://composer.github.io/installer.sig", "php://stdout");')"
 php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
 ACTUAL_CHECKSUM="$(php -r "echo hash_file('sha384', 'composer-setup.php');")"
 
@@ -248,11 +253,13 @@ rm composer-setup.php
 # INSTALL COMPOSER DEPENDENCIES
 php composer.phar install
 
-# GENERATE APP KEY
-php artisan key:generate
+# COMPILE PRODUCTION BUILD
+# You can add any compile command here (Yarn, npm, mix...) or remove the command if you don't need to compile anything.
+mix --production
 
-# BUILD STATIC SITE
-php please ssg:generate
+# GENERATE STATIC SITE
+# Remove --workers flag if spatie/fork is not present in your composer.json.
+php please ssg:generate --workers=4
 ```
 
 
