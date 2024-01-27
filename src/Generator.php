@@ -202,8 +202,8 @@ class Generator
 
         $results = $this->tasks->run(...$closures);
 
-        if ($this->anyTasksFailed($results)) {
-            throw GenerationFailedException::withConsoleMessage("\x1B[1A\x1B[2K");
+        if ($message = $this->firstFailedTask($results)) {
+            throw GenerationFailedException::withConsoleMessage("\x1B[1A\x1B[2K".$message);
         }
 
         $this->taskResults = $this->compileTasksResults($results);
@@ -213,9 +213,9 @@ class Generator
         return $this;
     }
 
-    protected function anyTasksFailed($results)
+    protected function firstFailedTask($results)
     {
-        return collect($results)->contains('');
+        return collect($results)->first(fn ($result) => is_string($result));
     }
 
     protected function compileTasksResults(array $results)
@@ -288,7 +288,7 @@ class Generator
                         $generated = $page->generate($request);
                     } catch (NotGeneratedException $e) {
                         if ($this->shouldFail($e)) {
-                            throw GenerationFailedException::withConsoleMessage("\x1B[1A\x1B[2K".$e->consoleMessage());
+                            return $e->consoleMessage();
                         }
 
                         $errors[] = $e->consoleMessage();
@@ -300,7 +300,7 @@ class Generator
 
                     if ($generated->hasWarning()) {
                         if ($this->shouldFail($generated)) {
-                            throw GenerationFailedException::withConsoleMessage($generated->consoleMessage());
+                            return $generated->consoleMessage();
                         }
 
                         $warnings[] = $generated->consoleMessage();
