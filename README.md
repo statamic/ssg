@@ -1,10 +1,6 @@
 # Statamic Static Site Generator
 
-Generate static sites with Statamic 3.
-
-![Statamic 3.0+](https://img.shields.io/badge/Statamic-3.0+-FF269E?style=for-the-badge&link=https://statamic.com)
-
-
+> Generate static sites with Statamic.
 
 ## Installation
 
