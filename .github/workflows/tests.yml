@@ -52,7 +52,7 @@ jobs:
 
       - name: Send Slack notification
         uses: 8398a7/action-slack@v2
-        if: failure()
+        if: failure() && github.event_name == 'schedule'
         with:
           status: ${{ job.status }}
           author_name: ${{ github.actor }}
