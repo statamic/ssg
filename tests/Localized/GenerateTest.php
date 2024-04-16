@@ -4,6 +4,7 @@ namespace Tests\Localized;
 
 use Illuminate\Filesystem\Filesystem;
 use Statamic\Facades\Config;
+use Statamic\Facades\Site;
 use Tests\Concerns\RunsGeneratorCommand;
 use Tests\TestCase;
 
@@ -18,8 +19,9 @@ class GenerateTest extends TestCase
         parent::getEnvironmentSetUp($app);
 
         $app['config']->set('statamic.editions.pro', true);
+        $app['config']->set('statamic.system.multisite', true);
 
-        $app['config']->set('statamic.sites.sites', [
+        Site::setSites([
             'default' => [
                 'name' => 'English',
                 'locale' => 'en_US',
