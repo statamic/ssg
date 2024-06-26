@@ -11,6 +11,7 @@ use Illuminate\Support\Arr;
 use League\Flysystem\Filesystem as Flysystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Statamic\Contracts\Imaging\UrlBuilder;
+use Statamic\Facades\Blink;
 use Statamic\Facades\Collection;
 use Statamic\Facades\Entry;
 use Statamic\Facades\Glide;
@@ -301,6 +302,8 @@ class Generator
 
                         $warnings[] = $generated->consoleMessage();
                     }
+
+                    Blink::flush();
                 }
 
                 return compact('count', 'warnings', 'errors');
