@@ -1,6 +1,10 @@
 # Statamic Static Site Generator
 
+<!-- statamic:hide -->
+
 > Generate static sites with Statamic.
+
+<!-- /statamic:hide -->
 
 ## Installation
 
