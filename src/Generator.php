@@ -9,7 +9,9 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Arr;
 use League\Flysystem\Filesystem as Flysystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use Statamic\Contracts\Imaging\UrlBuilder;
+use Statamic\Facades\Blink;
 use Statamic\Facades\Collection;
 use Statamic\Facades\Entry;
 use Statamic\Facades\Glide;
@@ -120,13 +122,8 @@ class Generator
 
         $directory = Arr::get($this->config, 'glide.directory');
 
-        // Determine which adapter to use for Flysystem 1.x or 3.x.
-        $localAdapter = class_exists($legacyAdapter = '\League\Flysystem\Adapter\Local')
-            ? $legacyAdapter
-            : '\League\Flysystem\Local\LocalFilesystemAdapter';
-
         $this->app['League\Glide\Server']->setCache(
-            new Flysystem(new $localAdapter($this->config['destination'].'/'.$directory))
+            new Flysystem(new LocalFilesystemAdapter($this->config['destination'].'/'.$directory))
         );
 
         $this->app->bind(UrlBuilder::class, function () use ($directory) {
@@ -305,6 +302,8 @@ class Generator
 
                         $warnings[] = $generated->consoleMessage();
                     }
+
+                    Blink::flush();
                 }
 
                 return compact('count', 'warnings', 'errors');

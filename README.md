@@ -1,26 +1,20 @@
 # Statamic Static Site Generator
 
-Generate static sites with Statamic 3.
+<!-- statamic:hide -->
 
-![Statamic 3.0+](https://img.shields.io/badge/Statamic-3.0+-FF269E?style=for-the-badge&link=https://statamic.com)
+> Generate static sites with Statamic.
 
-
+<!-- /statamic:hide -->
 
 ## Installation
 
-Install the package using Composer:
+You can install the Static Site Generator package with the following command:
 
 ```
-composer require statamic/ssg
+php please install:ssg
 ```
 
-If you want or need to customize the way the site is generated, you can do so by publishing and modifying the config file with the following command:
-
-```
-php artisan vendor:publish --provider="Statamic\StaticSite\ServiceProvider"
-```
-
-The config file will be in `config/statamic/ssg.php`. This is optional and you can do it anytime.
+The command will install the `statamic/ssg` package via Composer, optionally publish the configuration file and prompt you if you wish to install the `spatie/fork` package for running [multiple workers](#multiple-workers).
 
 
 ## Usage
@@ -32,6 +26,7 @@ php please ssg:generate
 ```
 
 Your site will be generated into a directory which you can deploy however you like. See [Deployment Examples](#deployment-examples) below for inspiration.
+
 
 ### Multiple Workers
 
