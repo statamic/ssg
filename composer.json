@@ -24,7 +24,7 @@
         }
     },
     "require": {
-        "statamic/cms": "dev-php84"
+        "statamic/cms": "^5.41"
     },
     "require-dev": {
         "orchestra/testbench": "^8.28 || ^9.6.1",
