@@ -264,6 +264,7 @@ class Generator
                 $count = 0;
                 $warnings = [];
                 $errors = [];
+                $verbose = env('SSG_VERBOSE', true);
 
                 foreach ($pages as $page) {
                     // There is no getter method, so use reflection.
@@ -279,7 +280,9 @@ class Generator
 
                     $request->setPage($page);
 
-                    Partyline::line("\x1B[1A\x1B[2KGenerating ".$page->url());
+                    if ($verbose) {
+                        Partyline::line("\x1B[1A\x1B[2KGenerating ".$page->url());
+                    }
 
                     try {
                         $generated = $page->generate($request);
