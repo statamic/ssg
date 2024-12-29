@@ -266,6 +266,7 @@ class Generator
                 $count = 0;
                 $warnings = [];
                 $errors = [];
+                $verbose = config('statamic.ssg.verbose');
 
                 foreach ($pages as $page) {
                     $oldCarbonFormat = $this->getToStringFormat();
@@ -280,7 +281,9 @@ class Generator
 
                     $request->setPage($page);
 
-                    Partyline::line("\x1B[1A\x1B[2KGenerating ".$page->url());
+                    if ($verbose) {
+                        Partyline::line("\x1B[1A\x1B[2KGenerating " . $page->url());
+                    };
 
                     try {
                         $generated = $page->generate($request);
