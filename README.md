@@ -84,7 +84,7 @@ You may configure a custom routing style in `config/statamic/ssg.php`:
 
 ```php
 'pagination_route' => '{url}/{page_name}/{page_number}',
-``` 
+```
 
 
 ## Post-generation callback
@@ -162,16 +162,14 @@ Deployments are triggered by committing to Git and pushing to GitHub.
 
 - Create a site in your [Netlify](https://netlify.com) account
 - Link the site to your desired GitHub repository
-- Add build command `php please ssg:generate` (if you need to compile css/js, be sure to add that command too and execute it before generating the static site folder. e.g. `npm install && npm run build && php please ssg:generate`).
-- Set publish directory `storage/app/static`
-
-After your site has an APP_URL...
-
-- Set it as an environment variable. Add `APP_URL` `https://thats-numberwang-47392.netlify.com`
-
-Finally, generate an `APP_KEY` to your .env file locally using `php artisan key:generate` and copy it's value, then...
-
-- Set it as an environment variable. Add `APP_KEY` `[your app key value]`
+- Add build command `php please ssg:generate`
+    - If you need to compile css/js, be sure to add that command too and execute it before generating the static site folder
+    - ie. `npm install && npm run build && php please ssg:generate`
+- Set publish directory to `storage/app/static`
+- Add `APP_KEY` env variable, by running `php artisan key:generate` locally, and copying from your `.env`
+    - ie. `APP_KEY` `your-app-key-value`
+- Add `APP_URL` environment variable after your site has a configured domain
+    - ie. `APP_URL` `https://thats-numberwang-47392.netlify.com`
 
 #### S3 Asset Containers
 
@@ -204,15 +202,19 @@ Be sure to also update these in your `s3` disk configuration:
 
 Deployments are triggered by committing to Git and pushing to GitHub.
 
-- Create a new file called `./build.sh` and paste the code snippet below.
-- Run `chmod +x build.sh` on your terminal to make sure the file can be executed when deploying.
+- Create a new file called `./build.sh` and paste the code snippet below
+- Run `chmod +x build.sh` on your terminal to make sure the file can be executed when deploying
 - Import a new site in your [Vercel](https://vercel.com) account
 - Link the site to your desired GitHub repository
 - Add build command `./build.sh`
+    - See [example build script](#example-build-script)
 - Set output directory to `storage/app/static`
-- Add environment variable in your project settings: `APP_KEY` `<copy & paste from dev>`
+- Add `APP_KEY` env variable, by running `php artisan key:generate` locally, and copying from your `.env`
+    - ie. `APP_KEY` `your-app-key-value`
+- Add `APP_URL` environment variable after your site has a configured domain
+    - ie. `APP_URL` `https://thats-numberwang-47392.vercel.app`
 
-#### Code for build.sh
+#### Example Build Script
 Add the following snippet to `build.sh` file to install PHP, Composer, and run the `ssg:generate` command:
 
 ```
