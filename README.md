@@ -247,6 +247,7 @@ php composer.phar install
 php artisan key:generate
 
 # BUILD STATIC SITE
+php please stache:warm -n -q
 php please ssg:generate
 ```
 
