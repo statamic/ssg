@@ -162,7 +162,7 @@ Deployments are triggered by committing to Git and pushing to GitHub.
 
 - Create a site in your [Netlify](https://netlify.com) account
 - Link the site to your desired GitHub repository
-- Add build command `php please ssg:generate`
+- Set build command to `php please ssg:generate`
     - If you need to compile css/js, be sure to add that command too and execute it before generating the static site folder
     - ie. `npm install && npm run build && php please ssg:generate`
 - Set publish directory to `storage/app/static`
@@ -206,8 +206,8 @@ Deployments are triggered by committing to Git and pushing to GitHub.
 - Run `chmod +x build.sh` on your terminal to make sure the file can be executed when deploying
 - Import a new site in your [Vercel](https://vercel.com) account
 - Link the site to your desired GitHub repository
-- Add build command `./build.sh`
-    - See [example build script](#example-build-script)
+- Set build command to `./build.sh`
+    - See [example build script](#example-build-script), which you'll also need to add to your project
 - Set output directory to `storage/app/static`
 - Add `APP_KEY` env variable, by running `php artisan key:generate` locally, and copying from your `.env`
     - ie. `APP_KEY` `your-app-key-value`
