@@ -202,12 +202,11 @@ Be sure to also update these in your `s3` disk configuration:
 
 Deployments are triggered by committing to Git and pushing to GitHub.
 
-- Create a new file called `./build.sh` and paste the code snippet below
+- Create a new file `build.sh` file in your project and paste from the [example code snippet](#example-build-script) below
 - Run `chmod +x build.sh` on your terminal to make sure the file can be executed when deploying
 - Import a new site in your [Vercel](https://vercel.com) account
 - Link the site to your desired GitHub repository
 - Set build command to `./build.sh`
-    - See [example build script](#example-build-script), which you'll also need to add to your project
 - Set output directory to `storage/app/static`
 - Add `APP_KEY` env variable, by running `php artisan key:generate` locally, and copying from your `.env`
     - ie. `APP_KEY` `your-app-key-value`
@@ -215,6 +214,7 @@ Deployments are triggered by committing to Git and pushing to GitHub.
     - ie. `APP_URL` `https://thats-numberwang-47392.vercel.app`
 
 #### Example Build Script
+
 Add the following snippet to `build.sh` file to install PHP, Composer, and run the `ssg:generate` command:
 
 ```
