@@ -75,14 +75,12 @@ class Page
     protected function writePaginatedPages($request, $paginator)
     {
         collect(range(1, $paginator->lastPage()))->each(function ($pageNumber) use ($request) {
-            $page = clone $this;
-
             try {
-                $page
+                $this
                     ->setPaginationCurrentPage($pageNumber)
                     ->write($request);
             } catch (Exception $e) {
-                throw new NotGeneratedException($page, $e);
+                throw new NotGeneratedException($this, $e);
             }
         });
 
