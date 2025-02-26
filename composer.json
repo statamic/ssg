@@ -27,8 +27,8 @@
         "statamic/cms": "^5.41"
     },
     "require-dev": {
-        "orchestra/testbench": "^8.28 || ^9.6.1",
-        "phpunit/phpunit": "^10.5.35"
+        "orchestra/testbench": "^8.28 || ^9.6.1 || ^10.0",
+        "phpunit/phpunit": "^10.5.35 || ^11.0"
     },
     "config": {
         "allow-plugins": {
