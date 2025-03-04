@@ -271,7 +271,9 @@ class Generator
                     $oldCarbonFormat = $this->getToStringFormat();
 
                     if ($this->shouldSetCarbonFormat($page)) {
-                        Carbon::setToStringFormat(Statamic::dateFormat());
+                        Date::setToStringFormat(function (Carbon $date) {
+                            return $date->setTimezone(config('statamic.system.display_timezone'))->format(Statamic::dateFormat());
+                        });
                     }
 
                     $this->updateCurrentSite($page->site());
@@ -489,7 +491,7 @@ class Generator
      *
      * @throws \ReflectionException
      */
-    protected function getToStringFormat(): ?string
+    protected function getToStringFormat(): string|\Closure|null
     {
         $reflection = new ReflectionClass($date = Date::now());
 
