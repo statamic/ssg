@@ -272,7 +272,7 @@ class Generator
 
                     if ($this->shouldSetCarbonFormat($page)) {
                         Date::setToStringFormat(function (Carbon $date) {
-                            return $date->setTimezone(config('statamic.system.display_timezone'))->format(Statamic::dateFormat());
+                            return $date->setTimezone(Statamic::displayTimezone())->format(Statamic::dateFormat());
                         });
                     }
 
