@@ -75,6 +75,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Trailing Slashes
+    |--------------------------------------------------------------------------
+    |
+    | Enable to enforce trailing slashes on generated URLs. Some static site
+    | hosts expect trailing slashes on URLs for things like SEO sitemaps
+    | and RSS feeds in order to comply with the server configuration.
+    |
+    | NOTE: This is an experimental feature, and requires Statamic 6+!
+    |
+    */
+
+    'enforce_trailing_slashes' => false,
+
+    /*
+    |--------------------------------------------------------------------------
     | Pagination Route
     |--------------------------------------------------------------------------
     |
