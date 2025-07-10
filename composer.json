@@ -24,7 +24,7 @@
         }
     },
     "require": {
-        "statamic/cms": "dev-master"
+        "statamic/cms": "dev-url-trailing-slashes as 6.0"
     },
     "require-dev": {
         "orchestra/testbench": "^9.6.1 || ^10.0",
