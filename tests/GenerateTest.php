@@ -410,4 +410,16 @@ EOT
         $page3 = $files['articles/page/3/index.html'];
         $this->assertStringContainsString('Prev Link: /articles/page/2/', $page3);
     }
+
+    /** @test */
+    public function it_still_generates_404_when_trailing_slashes_config_is_enabled()
+    {
+        Config::set('statamic.ssg.enforce_trailing_slashes', true);
+
+        $files = $this->generate();
+
+        $this->assertContains('404.html', array_keys($files));
+
+        $this->assertStringContainsString('<h1>404!</h1>', $files['404.html']);
+    }
 }
