@@ -4,11 +4,20 @@ namespace Tests;
 
 use Illuminate\Filesystem\Filesystem;
 use Statamic\Facades\Config;
+use Statamic\Facades\URL;
 use Tests\Concerns\RunsGeneratorCommand;
 
 class GenerateTest extends TestCase
 {
     use RunsGeneratorCommand;
+
+    protected function tearDown(): void
+    {
+        URL::enforceTrailingSlashes(false);
+        URL::clearUrlCache();
+
+        parent::tearDown();
+    }
 
     /** @test */
     public function it_generates_pages_for_site_fixture()
@@ -353,5 +362,52 @@ EOT
         $this->assertStringContainsString('Current Page: 3', $index);
         $this->assertStringContainsString('Total Pages: 3', $index);
         $this->assertStringContainsString('Prev Link: /articles/page/2', $index);
+    }
+
+    /** @test */
+    public function it_enforces_trailing_slashes_when_config_enabled()
+    {
+        Config::set('statamic.ssg.enforce_trailing_slashes', true);
+
+        $files = $this->generate();
+
+        $index = $files['articles/index.html'];
+        $this->assertStringContainsString('<a href="http://cool-runnings.com/articles/one/">One</a>', $index);
+        $this->assertStringContainsString('<a href="http://cool-runnings.com/articles/two/">Two</a>', $index);
+        $this->assertStringContainsString('<a href="http://cool-runnings.com/articles/three/">Three</a>', $index);
+    }
+
+    /** @test */
+    public function it_enforces_trailing_slashes_on_paginated_urls_when_config_enabled()
+    {
+        Config::set('statamic.ssg.enforce_trailing_slashes', true);
+
+        $this->files->put(resource_path('views/articles/index.antlers.html'), <<<'EOT'
+{{ collection:articles sort="date:asc" paginate="3" as="articles" }}
+    {{ articles }}
+        <a href="{{ permalink }}">{{ title }}</a>
+    {{ /articles }}
+
+    {{ paginate }}
+        Current Page: {{ current_page }}
+        Total Pages: {{ total_pages }}
+        Prev Link: {{ prev_page }}
+        Next Link: {{ next_page }}
+    {{ /paginate }}
+{{ /collection:articles }}
+EOT
+        );
+
+        $files = $this->generate();
+
+        $index = $files['articles/index.html'];
+        $this->assertStringContainsString('Next Link: /articles/page/2/', $index);
+
+        $page2 = $files['articles/page/2/index.html'];
+        $this->assertStringContainsString('Prev Link: /articles/page/1/', $page2);
+        $this->assertStringContainsString('Next Link: /articles/page/3/', $page2);
+
+        $page3 = $files['articles/page/3/index.html'];
+        $this->assertStringContainsString('Prev Link: /articles/page/2/', $page3);
     }
 }
