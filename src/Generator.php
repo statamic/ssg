@@ -271,7 +271,9 @@ class Generator
                     $oldCarbonFormat = $this->getToStringFormat();
 
                     if ($this->shouldSetCarbonFormat($page)) {
-                        Carbon::setToStringFormat(Statamic::dateFormat());
+                        Date::setToStringFormat(function (Carbon $date) {
+                            return $date->setTimezone(Statamic::displayTimezone())->format(Statamic::dateFormat());
+                        });
                     }
 
                     $this->updateCurrentSite($page->site());
@@ -461,7 +463,7 @@ class Generator
 
     protected function makeAbsoluteUrl($url)
     {
-        return URL::tidy(Str::start($url, $this->config['base_url'].'/'));
+        return URL::assemble($this->config['base_url'], $url);
     }
 
     protected function shouldRejectPage($page, $outputError = false)
@@ -489,19 +491,10 @@ class Generator
      *
      * @throws \ReflectionException
      */
-    protected function getToStringFormat(): ?string
+    protected function getToStringFormat(): string|\Closure|null
     {
         $reflection = new ReflectionClass($date = Date::now());
 
-        // Carbon 2.x
-        if ($reflection->hasProperty('toStringFormat')) {
-            $format = $reflection->getProperty('toStringFormat');
-            $format->setAccessible(true);
-
-            return $format->getValue();
-        }
-
-        // Carbon 3.x
         $factory = $reflection->getMethod('getFactory');
         $factory->setAccessible(true);
 
