@@ -7,6 +7,7 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\RedirectResponse;
 use Statamic\Facades\Blink;
+use Statamic\Facades\URL;
 
 class Page
 {
@@ -135,7 +136,7 @@ class Page
 
     public function is404()
     {
-        return $this->url() === '/404';
+        return $this->url() === URL::tidy('/404');
     }
 
     public function setPaginationCurrentPage($currentPage)

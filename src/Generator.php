@@ -463,7 +463,7 @@ class Generator
 
     protected function makeAbsoluteUrl($url)
     {
-        return URL::tidy(Str::start($url, $this->config['base_url'].'/'));
+        return URL::assemble($this->config['base_url'], $url);
     }
 
     protected function shouldRejectPage($page, $outputError = false)

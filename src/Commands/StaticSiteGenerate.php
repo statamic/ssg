@@ -4,6 +4,7 @@ namespace Statamic\StaticSite\Commands;
 
 use Illuminate\Console\Command;
 use Statamic\Console\RunsInPlease;
+use Statamic\Facades\URL;
 use Statamic\StaticSite\GenerationFailedException;
 use Statamic\StaticSite\Generator;
 use Wilderborn\Partyline\Facade as Partyline;
@@ -53,6 +54,10 @@ class StaticSiteGenerate extends Command
      */
     public function handle()
     {
+        if (config('statamic.ssg.enforce_trailing_slashes')) {
+            URL::enforceTrailingSlashes();
+        }
+
         Partyline::bind($this);
 
         if (config('statamic.editions.pro') && ! config('statamic.system.license_key')) {
