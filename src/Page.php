@@ -63,9 +63,7 @@ class Page
 
         $html = $response->getContent();
 
-        if (! $this->files->exists($this->directory())) {
-            $this->files->makeDirectory($this->directory(), 0755, true);
-        }
+        $this->files->makeDirectory($this->directory(), 0755, true, true);
 
         $this->files->put($this->path(), $html);
 
