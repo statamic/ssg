@@ -113,17 +113,17 @@ class Generator
             ->copyFiles()
             ->outputSummary();
 
-            if ( count($this->after) > 0 ) {
-                foreach ($this->after as $id => $after) {
-                    if (in_array($id, $this->skipAfter)) {
-                        Partyline::line("<comment>Skipping $id after function...</comment>");
-                        continue;
-                    }
-                    Partyline::line("<info>Calling $id after function...</info>");
-                    call_user_func($after);
+        if ( count($this->after) > 0 ) {
+            foreach ($this->after as $id => $after) {
+                if (in_array($id, $this->skipAfter)) {
+                    Partyline::line("<comment>Skipping $id after function...</comment>");
+                    continue;
                 }
+                Partyline::line("<info>Calling $id after function...</info>");
+                call_user_func($after);
             }
         }
+    }
 
     public function bindGlide()
     {
