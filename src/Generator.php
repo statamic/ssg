@@ -73,13 +73,15 @@ class Generator
         return $this;
     }
 
-    public function after($after, $id = 'unidentified') {
+    public function after($after, $id = 'unidentified') 
+    {
         $this->after[$id] = $after;
 
         return $this;
     }
     
-    public function skipAfter( string $id ) {
+    public function skipAfter( string $id ) 
+    {
         $this->skipAfter[] = $id;
     }
 
