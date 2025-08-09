@@ -36,6 +36,7 @@ class Generator
     protected $config;
     protected $request;
     protected $after;
+    protected $skipAfter;
     protected $extraUrls;
     protected $workers = 1;
     protected $earlyTaskErrors = [];
@@ -50,6 +51,8 @@ class Generator
         $this->tasks = $tasks;
         $this->extraUrls = collect();
         $this->config = $this->initializeConfig();
+        $this->after = array();
+        $this->skipAfter = array();
     }
 
     private function initializeConfig()
@@ -70,11 +73,16 @@ class Generator
         return $this;
     }
 
-    public function after($after)
+    public function after($after, $id = 'unidentified') 
     {
-        $this->after = $after;
+        $this->after[$id] = $after;
 
         return $this;
+    }
+    
+    public function skipAfter( string $id ) 
+    {
+        $this->skipAfter[] = $id;
     }
 
     public function addUrls($closure)
@@ -107,8 +115,15 @@ class Generator
             ->copyFiles()
             ->outputSummary();
 
-        if ($this->after) {
-            call_user_func($this->after);
+        if ( count($this->after) > 0 ) {
+            foreach ($this->after as $id => $after) {
+                if (in_array($id, $this->skipAfter)) {
+                    Partyline::line("<comment>Skipping $id after function...</comment>");
+                    continue;
+                }
+                Partyline::line("<info>Calling $id after function...</info>");
+                call_user_func($after);
+            }
         }
     }
 
