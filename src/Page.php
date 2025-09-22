@@ -63,7 +63,7 @@ class Page
 
         $html = $response->getContent();
 
-        $this->files->makeDirectory($this->directory(), 0755, true, true);
+        $this->files->makeDirectory($this->directory(), recursive: true, force: true);
 
         $this->files->put($this->path(), $html);
 
