@@ -1,0 +1,6 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: Statamic Core
+    url: https://github.com/statamic/cms/issues/new/choose
+    about: This repository is for the SSG. If you're having issues with Statamic itself, please open an issue on the cms repository.
