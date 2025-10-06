@@ -115,4 +115,16 @@ return [
 
     'failures' => false, // 'errors' or 'warnings'
 
+    /*
+    |--------------------------------------------------------------------------
+    | Verbosity
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, the SSG will print a line for every page it generates.
+    | Useful for debugging or keeping track of the command's progress.
+    |
+    */
+
+    'verbose' => true,
+
 ];
