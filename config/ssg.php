@@ -120,10 +120,8 @@ return [
     | Verbosity
     |--------------------------------------------------------------------------
     |
-    | By default SSG will print out a lot of information about
-    | what it is doing, including a line for every file it outputs.
-    |
-    | This option allows you to choose to get a little less information.
+    | When enabled, the SSG will print a line for every page it generates.
+    | Useful for debugging or keeping track of the command's progress.
     |
     */
 
