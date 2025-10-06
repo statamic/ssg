@@ -282,8 +282,8 @@ class Generator
                     $request->setPage($page);
 
                     if ($verbose) {
-                        Partyline::line("\x1B[1A\x1B[2KGenerating " . $page->url());
-                    };
+                        Partyline::line("\x1B[1A\x1B[2KGenerating ".$page->url());
+                    }
 
                     try {
                         $generated = $page->generate($request);
