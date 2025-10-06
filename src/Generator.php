@@ -8,8 +8,12 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Date;
 use League\Flysystem\Filesystem as Flysystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
+use ReflectionClass;
 use Statamic\Contracts\Imaging\UrlBuilder;
+use Statamic\Facades\Blink;
 use Statamic\Facades\Collection;
 use Statamic\Facades\Entry;
 use Statamic\Facades\Glide;
@@ -120,13 +124,8 @@ class Generator
 
         $directory = Arr::get($this->config, 'glide.directory');
 
-        // Determine which adapter to use for Flysystem 1.x or 3.x.
-        $localAdapter = class_exists($legacyAdapter = '\League\Flysystem\Adapter\Local')
-            ? $legacyAdapter
-            : '\League\Flysystem\Local\LocalFilesystemAdapter';
-
         $this->app['League\Glide\Server']->setCache(
-            new Flysystem(new $localAdapter($this->config['destination'].'/'.$directory))
+            new Flysystem(new LocalFilesystemAdapter($this->config['destination'].'/'.$directory))
         );
 
         $this->app->bind(UrlBuilder::class, function () use ($directory) {
@@ -202,8 +201,8 @@ class Generator
 
         $results = $this->tasks->run(...$closures);
 
-        if ($this->anyTasksFailed($results)) {
-            throw GenerationFailedException::withConsoleMessage("\x1B[1A\x1B[2K");
+        if ($message = $this->firstFailedTask($results)) {
+            throw GenerationFailedException::withConsoleMessage("\x1B[1A\x1B[2K".$message);
         }
 
         $this->taskResults = $this->compileTasksResults($results);
@@ -213,9 +212,9 @@ class Generator
         return $this;
     }
 
-    protected function anyTasksFailed($results)
+    protected function firstFailedTask($results)
     {
-        return collect($results)->contains('');
+        return collect($results)->first(fn ($result) => is_string($result));
     }
 
     protected function compileTasksResults(array $results)
@@ -269,8 +268,7 @@ class Generator
                 $errors = [];
 
                 foreach ($pages as $page) {
-                    // There is no getter method, so use reflection.
-                    $oldCarbonFormat = (new \ReflectionClass(Carbon::class))->getStaticPropertyValue('toStringFormat');
+                    $oldCarbonFormat = $this->getToStringFormat();
 
                     if ($this->shouldSetCarbonFormat($page)) {
                         Carbon::setToStringFormat(Statamic::dateFormat());
@@ -288,7 +286,7 @@ class Generator
                         $generated = $page->generate($request);
                     } catch (NotGeneratedException $e) {
                         if ($this->shouldFail($e)) {
-                            throw GenerationFailedException::withConsoleMessage("\x1B[1A\x1B[2K".$e->consoleMessage());
+                            return $e->consoleMessage();
                         }
 
                         $errors[] = $e->consoleMessage();
@@ -300,11 +298,13 @@ class Generator
 
                     if ($generated->hasWarning()) {
                         if ($this->shouldFail($generated)) {
-                            throw GenerationFailedException::withConsoleMessage($generated->consoleMessage());
+                            return $generated->consoleMessage();
                         }
 
                         $warnings[] = $generated->consoleMessage();
                     }
+
+                    Blink::flush();
                 }
 
                 return compact('count', 'warnings', 'errors');
@@ -481,5 +481,30 @@ class Generator
         }
 
         return $excluded;
+    }
+
+    /**
+     * This method is used to get the current toStringFormat for Carbon, in order for us
+     * to restore it later. There's no getter for it, so we need to use reflection.
+     *
+     * @throws \ReflectionException
+     */
+    protected function getToStringFormat(): ?string
+    {
+        $reflection = new ReflectionClass($date = Date::now());
+
+        // Carbon 2.x
+        if ($reflection->hasProperty('toStringFormat')) {
+            $format = $reflection->getProperty('toStringFormat');
+            $format->setAccessible(true);
+
+            return $format->getValue();
+        }
+
+        // Carbon 3.x
+        $factory = $reflection->getMethod('getFactory');
+        $factory->setAccessible(true);
+
+        return Arr::get($factory->invoke($date)->getSettings(), 'toStringFormat');
     }
 }

@@ -1,7 +1,7 @@
 {
     "name": "statamic/ssg",
     "type": "statamic-addon",
-    "description": "Static site generator for Statamic 3.",
+    "description": "Generate static sites with Statamic.",
     "autoload": {
         "psr-4": {
             "Statamic\\StaticSite\\": "src"
@@ -15,7 +15,7 @@
     "extra": {
         "statamic": {
             "name": "Static Site Generator",
-            "description": "Static Site Generator addon"
+            "description": "Generate static sites with Statamic."
         },
         "laravel": {
             "providers": [
@@ -24,10 +24,11 @@
         }
     },
     "require": {
-        "statamic/cms": "^4.0"
+        "statamic/cms": "^5.41"
     },
     "require-dev": {
-        "orchestra/testbench": "^7.0 || ^8.0"
+        "orchestra/testbench": "^8.28 || ^9.6.1 || ^10.0",
+        "phpunit/phpunit": "^10.5.35 || ^11.0"
     },
     "config": {
         "allow-plugins": {

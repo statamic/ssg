@@ -1,26 +1,20 @@
 # Statamic Static Site Generator
 
-Generate static sites with Statamic 3.
+<!-- statamic:hide -->
 
-![Statamic 3.0+](https://img.shields.io/badge/Statamic-3.0+-FF269E?style=for-the-badge&link=https://statamic.com)
+> Generate static sites with Statamic.
 
-
+<!-- /statamic:hide -->
 
 ## Installation
 
-Install the package using Composer:
+You can install the Static Site Generator package with the following command:
 
 ```
-composer require statamic/ssg
+php please install:ssg
 ```
 
-If you want or need to customize the way the site is generated, you can do so by publishing and modifying the config file with the following command:
-
-```
-php artisan vendor:publish --provider="Statamic\StaticSite\ServiceProvider"
-```
-
-The config file will be in `config/statamic/ssg.php`. This is optional and you can do it anytime.
+The command will install the `statamic/ssg` package via Composer, optionally publish the configuration file and prompt you if you wish to install the `spatie/fork` package for running [multiple workers](#multiple-workers).
 
 
 ## Usage
@@ -32,6 +26,7 @@ php please ssg:generate
 ```
 
 Your site will be generated into a directory which you can deploy however you like. See [Deployment Examples](#deployment-examples) below for inspiration.
+
 
 ### Multiple Workers
 
@@ -89,7 +84,7 @@ You may configure a custom routing style in `config/statamic/ssg.php`:
 
 ```php
 'pagination_route' => '{url}/{page_name}/{page_number}',
-``` 
+```
 
 
 ## Post-generation callback
@@ -167,16 +162,14 @@ Deployments are triggered by committing to Git and pushing to GitHub.
 
 - Create a site in your [Netlify](https://netlify.com) account
 - Link the site to your desired GitHub repository
-- Add build command `php please ssg:generate` (if you need to compile css/js, be sure to add that command too and execute it before generating the static site folder. e.g. `npm install && npm run build && php please ssg:generate`).
-- Set publish directory `storage/app/static`
-
-After your site has an APP_URL...
-
-- Set it as an environment variable. Add `APP_URL` `https://thats-numberwang-47392.netlify.com`
-
-Finally, generate an `APP_KEY` to your .env file locally using `php artisan key:generate` and copy it's value, then...
-
-- Set it as an environment variable. Add `APP_KEY` `[your app key value]`
+- Set build command to `php please ssg:generate`
+    - If you need to compile css/js, be sure to add that command too and execute it before generating the static site folder
+    - ie. `npm install && npm run build && php please ssg:generate`
+- Set publish directory to `storage/app/static`
+- Add `APP_KEY` env variable, by running `php artisan key:generate` locally, and copying from your `.env`
+    - ie. `APP_KEY` `your-app-key-value`
+- Add `APP_URL` environment variable after your site has a configured domain
+    - ie. `APP_URL` `https://thats-numberwang-47392.netlify.com`
 
 #### S3 Asset Containers
 
@@ -209,26 +202,28 @@ Be sure to also update these in your `s3` disk configuration:
 
 Deployments are triggered by committing to Git and pushing to GitHub.
 
-- Create a new file called `./build.sh` and paste the code snippet below.
-- Run `chmod +x build.sh` on your terminal to make sure the file can be executed when deploying.
+- Create a new file `build.sh` file in your project and paste from the [example code snippet](#example-build-script) below
+- Run `chmod +x build.sh` on your terminal to make sure the file can be executed when deploying
 - Import a new site in your [Vercel](https://vercel.com) account
 - Link the site to your desired GitHub repository
-- Add build command `./build.sh`
+- Set build command to `./build.sh`
 - Set output directory to `storage/app/static`
-- Add environment variable in your project settings: `APP_KEY` `<copy & paste from dev>`
+- Add `APP_KEY` env variable, by running `php artisan key:generate` locally, and copying from your `.env`
+    - ie. `APP_KEY` `your-app-key-value`
+- Add `APP_URL` environment variable after your site has a configured domain
+    - ie. `APP_URL` `https://thats-numberwang-47392.vercel.app`
 
-#### Code for build.sh
+#### Example Build Script
+
 Add the following snippet to `build.sh` file to install PHP, Composer, and run the `ssg:generate` command:
 
 ```
 #!/bin/sh
 
 # Install PHP & WGET
-yum install -y amazon-linux-extras
-amazon-linux-extras enable php7.4
-yum clean metadata
-yum install php php-{common,curl,mbstring,gd,gettext,bcmath,json,xml,fpm,intl,zip,imap}
-yum install wget
+dnf clean metadata
+dnf install -y php8.2 php8.2-{common,mbstring,gd,bcmath,xml,fpm,intl,zip}
+dnf install -y wget
 
 # INSTALL COMPOSER
 EXPECTED_CHECKSUM="$(wget -q -O - https://composer.github.io/installer.sig)"
@@ -252,6 +247,7 @@ php composer.phar install
 php artisan key:generate
 
 # BUILD STATIC SITE
+php please stache:warm -n -q
 php please ssg:generate
 ```
 

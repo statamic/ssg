@@ -48,7 +48,7 @@ class Request extends \Illuminate\Http\Request
 
     public function getPathInfo(): string
     {
-        return $this->page->url();
+        return $this->page?->url() ?? '/';
     }
 
     public function path()
