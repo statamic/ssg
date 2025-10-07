@@ -8,6 +8,7 @@ use Statamic\Facades\URL;
 use Statamic\StaticSite\GenerationFailedException;
 use Statamic\StaticSite\Generator;
 use Wilderborn\Partyline\Facade as Partyline;
+use function Laravel\Prompts\confirm;
 
 class StaticSiteGenerate extends Command
 {
@@ -61,19 +62,19 @@ class StaticSiteGenerate extends Command
         Partyline::bind($this);
 
         if (config('statamic.editions.pro') && ! config('statamic.system.license_key')) {
-            $this->error('Statamic Pro is enabled but no site license was found.');
-            $this->warn('Please set a valid Statamic License Key in your .env file.');
+            $this->components->error('Statamic Pro is enabled but no site license was found.');
+            $this->components->warn('Please set a valid Statamic License Key in your .env file.');
             $confirmationText = 'By continuing you agree that this build is for testing purposes only. Do you wish to continue?';
 
-            if (! $this->option('no-interaction') && ! $this->confirm($confirmationText)) {
-                $this->line('Static site generation canceled.');
+            if (! $this->option('no-interaction') && ! confirm($confirmationText)) {
+                $this->components->error('Static site generation canceled.');
 
                 return 0;
             }
         }
 
         if (! $workers = $this->option('workers')) {
-            $this->comment('You may be able to speed up site generation significantly by installing spatie/fork and using multiple workers (requires PHP 8+).');
+             $this->components->info('You may be able to speed up site generation significantly by installing spatie/fork and using multiple workers.');
         }
 
         try {
@@ -82,8 +83,8 @@ class StaticSiteGenerate extends Command
                 ->disableClear($this->option('disable-clear') ?? false)
                 ->generate($this->argument('urls') ?: '*');
         } catch (GenerationFailedException $e) {
-            $this->line($e->getConsoleMessage());
-            $this->error('Static site generation failed.');
+            $this->components->error($e->getConsoleMessage());
+            $this->components->error('Static site generation failed.');
 
             return 1;
         }

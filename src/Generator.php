@@ -26,6 +26,7 @@ use Statamic\Imaging\StaticUrlBuilder;
 use Statamic\Statamic;
 use Statamic\Support\Str;
 use Wilderborn\Partyline\Facade as Partyline;
+use function Laravel\Prompts\spin;
 
 class Generator
 {
@@ -154,10 +155,10 @@ class Generator
             $dest = $this->config['destination'].'/'.$dest;
 
             if ($this->files->exists($dest)) {
-                Partyline::line("Symlink not created. $dest already exists.");
+                Partyline::outputComponents()->warn("Symlink not created. $dest already exists.");
             } else {
                 $this->files->link($source, $dest);
-                Partyline::line("<info>[✔]</info> $source symlinked to $dest");
+                Partyline::outputComponents()->success("$source symlinked to $dest");
             }
         }
 
@@ -175,7 +176,7 @@ class Generator
                 $this->files->copyDirectory($source, $dest);
             }
 
-            Partyline::line("<info>[✔]</info> $source copied to $dest");
+            Partyline::outputComponents()->success("$source copied to $dest");
         }
 
         return $this;
@@ -236,11 +237,13 @@ class Generator
                 ->reject(fn ($page) => $this->shouldRejectPage($page, true));
         }
 
-        Partyline::line('Gathering content to be generated...');
+        $pages = spin(
+            fn () => $this->gatherAllPages(),
+            'Gathering content to be generated...',
+        );
 
-        $pages = $this->gatherAllPages();
-
-        Partyline::line("\x1B[1A\x1B[2K<info>[✔]</info> Gathered content to be generated");
+        // todo
+        Partyline::outputComponents()->info('Gathered content to be generated');
 
         return $pages;
     }
@@ -282,6 +285,7 @@ class Generator
 
                     $request->setPage($page);
 
+//                    Partyline::outputComponents()->twoColumnDetail($page->url(), '<info>Generating...</info>');
                     Partyline::line("\x1B[1A\x1B[2KGenerating ".$page->url());
 
                     try {
@@ -320,24 +324,23 @@ class Generator
 
         $successCount = $results['count'] - $results['errors']->count();
 
-        Partyline::line("\x1B[1A\x1B[2K<info>[✔]</info> Generated {$successCount} content files");
+        Partyline::outputComponents()->success("Generated {$successCount} content files");
 
         $results['warnings']->merge($results['errors'])->each(fn ($error) => Partyline::line($error));
     }
 
     protected function outputSummary()
     {
-        Partyline::info('');
-        Partyline::info('Static site generated into '.$this->config['destination']);
+        Partyline::outputComponents()->success('Static site generated into '.$this->config['destination']);
 
         $total = $this->taskResults['count'];
 
         if ($errors = count($this->taskResults['errors'])) {
-            Partyline::warn("[!] {$errors}/{$total} pages not generated");
+            Partyline::outputComponents()->warn("{$errors}/{$total} pages not generated");
         }
 
         if ($warnings = count($this->taskResults['warnings'])) {
-            Partyline::warn("[!] {$warnings}/{$total} pages generated with warnings");
+            Partyline::outputComponents()->warn("{$warnings}/{$total} pages generated with warnings");
         }
     }
 
@@ -438,7 +441,7 @@ class Generator
             return;
         }
 
-        throw new \RuntimeException('To use multiple workers, you must install PHP 8 and spatie/fork.');
+        throw new \RuntimeException('To use multiple workers, you must install spatie/fork.');
     }
 
     protected function shouldFail($item)
