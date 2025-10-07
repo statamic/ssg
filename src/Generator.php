@@ -26,6 +26,7 @@ use Statamic\Imaging\StaticUrlBuilder;
 use Statamic\Statamic;
 use Statamic\Support\Str;
 use Wilderborn\Partyline\Facade as Partyline;
+
 use function Laravel\Prompts\spin;
 
 class Generator

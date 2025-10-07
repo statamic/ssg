@@ -8,6 +8,7 @@ use Statamic\Facades\URL;
 use Statamic\StaticSite\GenerationFailedException;
 use Statamic\StaticSite\Generator;
 use Wilderborn\Partyline\Facade as Partyline;
+
 use function Laravel\Prompts\confirm;
 
 class StaticSiteGenerate extends Command
@@ -74,7 +75,7 @@ class StaticSiteGenerate extends Command
         }
 
         if (! $workers = $this->option('workers')) {
-             $this->components->info('You may be able to speed up site generation significantly by installing spatie/fork and using multiple workers.');
+            $this->components->info('You may be able to speed up site generation significantly by installing spatie/fork and using multiple workers.');
         }
 
         try {
