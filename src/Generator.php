@@ -155,10 +155,10 @@ class Generator
             $dest = $this->config['destination'].'/'.$dest;
 
             if ($this->files->exists($dest)) {
-                Partyline::outputComponents()->warn("Symlink not created. $dest already exists.");
+                Partyline::outputComponents()->twoColumnDetail("$source symlinked to $dest", '<fg=blue;options=bold>SKIPPED. SYMLINK ALREADY EXISTS</>');
             } else {
                 $this->files->link($source, $dest);
-                Partyline::outputComponents()->success("$source symlinked to $dest");
+                Partyline::outputComponents()->twoColumnDetail("$source symlinked to $dest", '<fg=green;options=bold>SUCCESS</>');
             }
         }
 
@@ -176,7 +176,7 @@ class Generator
                 $this->files->copyDirectory($source, $dest);
             }
 
-            Partyline::outputComponents()->success("$source copied to $dest");
+            Partyline::outputComponents()->twoColumnDetail("$source copied to $dest", '<fg=green;options=bold>SUCCESS</>');
         }
 
         return $this;
