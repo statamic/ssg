@@ -224,8 +224,10 @@ class Generator
 
         return [
             'count' => count($this->earlyTaskErrors) + $results->sum('count'),
-            'warnings' => $results->flatMap->warnings,
-            'errors' => collect($this->earlyTaskErrors)->merge($results->flatMap->errors),
+//            'warnings' => $results->flatMap->warnings,
+            'warnings' => 0,
+//            'errors' => collect($this->earlyTaskErrors)->merge($results->flatMap->errors),
+            'errors' => collect(),
         ];
     }
 
@@ -284,7 +286,7 @@ class Generator
 
                     $request->setPage($page);
 
-                    Partyline::line("  Generating ".$page->url());
+                    $this->outputProgress($page->url(), '<fg=blue;options=bold>GENERATING</>');
 
                     try {
                         $generated = $page->generate($request);
@@ -292,6 +294,10 @@ class Generator
                         if ($this->shouldFail($e)) {
                             return $e->consoleMessage();
                         }
+
+                        // Clear line, then output FAILED status with newline
+                        $this->clearLine();
+                        Partyline::outputComponents()->twoColumnDetail($page->url(), '<fg=red;options=bold>FAILED</>');
 
                         $errors[] = $e->consoleMessage();
 
@@ -307,6 +313,10 @@ class Generator
 
                         $warnings[] = $generated->consoleMessage();
                     }
+
+                    // Clear line, then output SUCCESS status with newline
+                    $this->clearLine();
+                    Partyline::outputComponents()->twoColumnDetail($page->url(), '<fg=green;options=bold>SUCCESS</>');
 
                     Blink::flush();
                 }
@@ -325,8 +335,8 @@ class Generator
         Partyline::newLine();
         Partyline::outputComponents()->success("Generated {$successCount} content files");
 
-        $results['warnings']->each(fn ($warning) => Partyline::outputComponents()->warn($warning));
-        $results['errors']->each(fn ($error) => Partyline::outputComponents()->error($error));
+//        $results['warnings']->each(fn ($warning) => Partyline::outputComponents()->warn($warning));
+//        $results['errors']->each(fn ($error) => Partyline::outputComponents()->error($error));
     }
 
     protected function outputSummary()
@@ -335,13 +345,13 @@ class Generator
 
         $total = $this->taskResults['count'];
 
-        if ($errors = count($this->taskResults['errors'])) {
-            Partyline::outputComponents()->warn("{$errors}/{$total} pages not generated");
-        }
-
-        if ($warnings = count($this->taskResults['warnings'])) {
-            Partyline::outputComponents()->warn("{$warnings}/{$total} pages generated with warnings");
-        }
+//        if ($errors = count($this->taskResults['errors'])) {
+//            Partyline::outputComponents()->warn("{$errors}/{$total} pages not generated");
+//        }
+//
+//        if ($warnings = count($this->taskResults['warnings'])) {
+//            Partyline::outputComponents()->warn("{$warnings}/{$total} pages generated with warnings");
+//        }
     }
 
     protected function entries()
@@ -502,5 +512,55 @@ class Generator
         $factory->setAccessible(true);
 
         return Arr::get($factory->invoke($date)->getSettings(), 'toStringFormat');
+    }
+
+    /**
+     * Output a two-column detail line without a trailing newline.
+     * This allows the line to be overwritten later.
+     */
+    protected function outputProgress(string $first, string $second): void
+    {
+        // Extract the text from color tags
+        preg_match('/<fg=([^;>]+);options=bold>([^<]+)<\/>/', $second, $matches);
+        $color = $matches[1] ?? 'white';
+        $text = $matches[2] ?? $second;
+
+        // ANSI color codes
+        $colors = [
+            'blue' => "\033[34;1m",
+            'green' => "\033[32;1m",
+            'red' => "\033[31;1m",
+            'reset' => "\033[0m",
+            'gray' => "\033[90m",
+        ];
+
+        // Format: "  first .......... STATUS"
+        // The actual visible width calculation
+        $firstLen = strlen($first);
+        $textLen = strlen($text);
+
+        // Calculate dots to match twoColumnDetail width
+        // Subtract a bit more to account for spacing and ensure alignment
+        $dotsLen = max(1, 150 - $firstLen - $textLen - 6);
+
+        $line = sprintf("  %s %s%s%s %s%s%s",
+            $first,
+            $colors['gray'],
+            str_repeat('.', $dotsLen),
+            $colors['reset'],
+            $colors[$color] ?? '',
+            $text,
+            $colors['reset']
+        );
+
+        fwrite(STDERR, $line);
+    }
+
+    /**
+     * Clear the current line
+     */
+    protected function clearLine(): void
+    {
+        fwrite(STDERR, "\r\x1B[2K");
     }
 }
