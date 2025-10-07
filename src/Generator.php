@@ -284,7 +284,11 @@ class Generator
 
                     $request->setPage($page);
 
-                    $this->writeGeneratingLine($page->url());
+                    // Only write the "Generating" line when using a single worker.
+                    // Otherwise, the output will be messed up.
+                    if ($this->workers === 1) {
+                        $this->writeGeneratingLine($page->url());
+                    }
 
                     try {
                         $generated = $page->generate($request);
@@ -293,7 +297,10 @@ class Generator
                             return $e->consoleMessage();
                         }
 
-                        $this->clearCurrentLine();
+                        if ($this->workers === 1) {
+                            $this->clearCurrentLine();
+                        }
+
                         Partyline::outputComponents()->twoColumnDetail($page->url(), '<fg=red;options=bold>FAILED</>');
 
                         $errors[] = $e->consoleMessage();
@@ -311,7 +318,10 @@ class Generator
                         $warnings[] = $generated->consoleMessage();
                     }
 
-                    $this->clearCurrentLine();
+                    if ($this->workers === 1) {
+                        $this->clearCurrentLine();
+                    }
+
                     Partyline::outputComponents()->twoColumnDetail($page->url(), '<fg=green;options=bold>SUCCESS</>');
 
                     Blink::flush();
