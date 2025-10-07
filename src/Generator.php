@@ -196,7 +196,7 @@ class Generator
             $pages = $pages->shuffle();
         }
 
-        Partyline::line("Generating {$pages->count()} content files...");
+        Partyline::outputComponents()->info("Generating {$pages->count()} content files...");
 
         $closures = $this->makeContentGenerationClosures($pages, $request);
 
@@ -242,7 +242,6 @@ class Generator
             'Gathering content to be generated...',
         );
 
-        // todo
         Partyline::outputComponents()->info('Gathered content to be generated');
 
         return $pages;
@@ -285,8 +284,7 @@ class Generator
 
                     $request->setPage($page);
 
-//                    Partyline::outputComponents()->twoColumnDetail($page->url(), '<info>Generating...</info>');
-                    Partyline::line("\x1B[1A\x1B[2KGenerating ".$page->url());
+                    Partyline::line("  Generating ".$page->url());
 
                     try {
                         $generated = $page->generate($request);
@@ -324,9 +322,11 @@ class Generator
 
         $successCount = $results['count'] - $results['errors']->count();
 
+        Partyline::newLine();
         Partyline::outputComponents()->success("Generated {$successCount} content files");
 
-        $results['warnings']->merge($results['errors'])->each(fn ($error) => Partyline::line($error));
+        $results['warnings']->each(fn ($warning) => Partyline::outputComponents()->warn($warning));
+        $results['errors']->each(fn ($error) => Partyline::outputComponents()->error($error));
     }
 
     protected function outputSummary()
