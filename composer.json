@@ -38,6 +38,5 @@
     "suggest": {
         "spatie/fork": "Required to generate pages concurrently (^0.0.4)."
     },
-    "minimum-stability": "dev",
     "prefer-stable": true
 }
