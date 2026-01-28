@@ -24,7 +24,7 @@
         }
     },
     "require": {
-        "statamic/cms": "^6.0.0-alpha.7"
+        "statamic/cms": "^6.0.0"
     },
     "require-dev": {
         "orchestra/testbench": "^10.0",
@@ -37,6 +37,5 @@
     },
     "suggest": {
         "spatie/fork": "Required to generate pages concurrently (^0.0.4)."
-    },
-    "prefer-stable": true
+    }
 }
