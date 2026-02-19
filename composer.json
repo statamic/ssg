@@ -24,11 +24,11 @@
         }
     },
     "require": {
-        "statamic/cms": "^6.0.0"
+        "statamic/cms": "^6.0"
     },
     "require-dev": {
-        "orchestra/testbench": "^10.0",
-        "phpunit/phpunit": "^11.0"
+        "orchestra/testbench": "^10.0 || ^11.0",
+        "phpunit/phpunit": "^11.0 || ^12.0"
     },
     "config": {
         "allow-plugins": {
@@ -37,5 +37,7 @@
     },
     "suggest": {
         "spatie/fork": "Required to generate pages concurrently (^0.0.4)."
-    }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }
