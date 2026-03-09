@@ -3,6 +3,7 @@
 namespace Tests\Localized;
 
 use Illuminate\Filesystem\Filesystem;
+use PHPUnit\Framework\Attributes\Test;
 use Statamic\Facades\Config;
 use Statamic\Facades\Site;
 use Statamic\Facades\URL;
@@ -49,7 +50,7 @@ class GenerateTest extends TestCase
         parent::tearDown();
     }
 
-    /** @test */
+    #[Test]
     public function it_generates_pages_for_localized_site_fixture()
     {
         $files = $this->generate();
@@ -124,7 +125,7 @@ class GenerateTest extends TestCase
         $this->assertStringContainsString('<h1>Article Title: Le Five</h1>', $files['fr/le-articles/le-five/index.html']);
     }
 
-    /** @test */
+    #[Test]
     public function it_generates_localized_paginated_pages()
     {
         $this->files->put(resource_path('views/articles/index.antlers.html'), <<<'EOT'
@@ -185,7 +186,7 @@ EOT
         $this->assertStringContainsString('Prev Link: /fr/le-articles/page/1', $index);
     }
 
-    /** @test */
+    #[Test]
     public function it_generates_localized_pagination_with_custom_page_name_and_route()
     {
         // Here we'll override the `pagination_route`.
@@ -251,7 +252,7 @@ EOT
         $this->assertStringContainsString('Prev Link: /fr/le-articles/p-1', $index);
     }
 
-    /** @test */
+    #[Test]
     public function it_generates_associated_paginated_pages_when_generating_only_localized_urls_with_pagination()
     {
         $this->files->put(resource_path('views/articles/index.antlers.html'), <<<'EOT'
@@ -311,7 +312,7 @@ EOT
         $this->assertStringContainsString('Prev Link: /fr/le-articles/page/1', $index);
     }
 
-    /** @test */
+    #[Test]
     public function it_enforces_trailing_slashes_when_config_enabled()
     {
         Config::set('statamic.ssg.enforce_trailing_slashes', true);
@@ -329,7 +330,7 @@ EOT
         $this->assertStringContainsString('<a href="http://cool-runnings.com/fr/le-articles/le-three/">Le Three</a>', $frIndex);
     }
 
-    /** @test */
+    #[Test]
     public function it_enforces_trailing_slashes_on_localized_paginated_urls_when_config_enabled()
     {
         Config::set('statamic.ssg.enforce_trailing_slashes', true);
@@ -362,7 +363,7 @@ EOT
         $this->assertStringContainsString('Prev Link: /fr/le-articles/page/1/', $frPage2);
     }
 
-    /** @test */
+    #[Test]
     public function it_still_generates_404_when_trailing_slashes_config_is_enabled()
     {
         Config::set('statamic.ssg.enforce_trailing_slashes', true);

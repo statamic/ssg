@@ -3,6 +3,7 @@
 namespace Tests;
 
 use Illuminate\Filesystem\Filesystem;
+use PHPUnit\Framework\Attributes\Test;
 use Statamic\Facades\Config;
 use Statamic\Facades\URL;
 use Tests\Concerns\RunsGeneratorCommand;
@@ -19,7 +20,7 @@ class GenerateTest extends TestCase
         parent::tearDown();
     }
 
-    /** @test */
+    #[Test]
     public function it_generates_pages_for_site_fixture()
     {
         $files = $this->generate();
@@ -68,7 +69,7 @@ class GenerateTest extends TestCase
         $this->assertStringContainsString('<h1>Article Title: Eight</h1>', $files['articles/eight/index.html']);
     }
 
-    /** @test */
+    #[Test]
     public function it_generates_specific_pages_when_passing_urls_as_args()
     {
         $this
@@ -92,7 +93,7 @@ class GenerateTest extends TestCase
         $this->assertStringContainsString('<h1>Articles Index Page Title</h1>', $files['articles/index.html']);
     }
 
-    /** @test */
+    #[Test]
     public function it_generates_pages_to_custom_destination()
     {
         Config::set('statamic.ssg.destination', $this->destination = base_path('custom_export'));
@@ -105,7 +106,7 @@ class GenerateTest extends TestCase
         $this->cleanUpDestination();
     }
 
-    /** @test */
+    #[Test]
     public function it_clears_destination_directory_when_generating_site()
     {
         $this
@@ -117,7 +118,7 @@ class GenerateTest extends TestCase
         $this->generate();
     }
 
-    /** @test */
+    #[Test]
     public function it_can_generate_site_without_clearing_destination_directory()
     {
         $this
@@ -129,7 +130,7 @@ class GenerateTest extends TestCase
         $this->generate(['--disable-clear' => true]);
     }
 
-    /** @test */
+    #[Test]
     public function it_generates_paginated_pages()
     {
         $this->files->put(resource_path('views/articles/index.antlers.html'), <<<'EOT'
@@ -207,7 +208,7 @@ EOT
         $this->assertStringContainsString('Prev Link: /articles/page/2', $index);
     }
 
-    /** @test */
+    #[Test]
     public function it_generates_pagination_with_custom_page_name_and_route()
     {
         // Here we'll override the `pagination_route`.
@@ -290,7 +291,7 @@ EOT
         $this->assertStringContainsString('Prev Link: /articles/p-2', $index);
     }
 
-    /** @test */
+    #[Test]
     public function it_generates_associated_paginated_pages_when_generating_only_urls_with_pagination()
     {
         $this->files->put(resource_path('views/articles/index.antlers.html'), <<<'EOT'
@@ -364,7 +365,7 @@ EOT
         $this->assertStringContainsString('Prev Link: /articles/page/2', $index);
     }
 
-    /** @test */
+    #[Test]
     public function it_enforces_trailing_slashes_when_config_enabled()
     {
         Config::set('statamic.ssg.enforce_trailing_slashes', true);
@@ -377,7 +378,7 @@ EOT
         $this->assertStringContainsString('<a href="http://cool-runnings.com/articles/three/">Three</a>', $index);
     }
 
-    /** @test */
+    #[Test]
     public function it_enforces_trailing_slashes_on_paginated_urls_when_config_enabled()
     {
         Config::set('statamic.ssg.enforce_trailing_slashes', true);
@@ -411,7 +412,7 @@ EOT
         $this->assertStringContainsString('Prev Link: /articles/page/2/', $page3);
     }
 
-    /** @test */
+    #[Test]
     public function it_still_generates_404_when_trailing_slashes_config_is_enabled()
     {
         Config::set('statamic.ssg.enforce_trailing_slashes', true);

@@ -3,12 +3,13 @@
 namespace Tests;
 
 use Illuminate\Filesystem\Filesystem;
+use PHPUnit\Framework\Attributes\Test;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\StaticSite\Page;
 
 class PageTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function it_gets_the_path()
     {
         $entry = $this->mock(Entry::class);
@@ -20,7 +21,7 @@ class PageTest extends TestCase
         $this->assertEquals('/path/to/static/foo/bar', $page->directory());
     }
 
-    /** @test */
+    #[Test]
     public function it_gets_the_path_of_a_url_with_a_file_extension()
     {
         $entry = $this->mock(Entry::class);
@@ -32,7 +33,7 @@ class PageTest extends TestCase
         $this->assertEquals('/path/to/static/foo/bar', $page->directory());
     }
 
-    /** @test */
+    #[Test]
     public function it_gets_the_path_of_the_404_url()
     {
         $entry = $this->mock(Entry::class);
