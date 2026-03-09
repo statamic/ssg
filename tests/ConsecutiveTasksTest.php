@@ -2,11 +2,12 @@
 
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\Test;
 use Statamic\StaticSite\ConsecutiveTasks;
 
 class ConsecutiveTasksTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function it_runs_callbacks()
     {
         $callbacksRan = 0;
