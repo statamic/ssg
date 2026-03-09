@@ -2,12 +2,13 @@
 
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\Test;
 use Spatie\Fork\Fork;
 use Statamic\StaticSite\ConcurrentTasks;
 
 class ConcurrentTasksTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function it_runs_callbacks()
     {
         $one = function () {
