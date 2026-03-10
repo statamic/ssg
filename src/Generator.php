@@ -99,20 +99,30 @@ class Generator
             $this->disableClear = true;
         }
 
-        if ($this->files->exists(public_path('hot'))) {
-            Partyline::warn('<fg=yellow>[!]</> Vite hot file detected (public/hot). Asset URLs in your generated HTML will point to the Vite dev server (localhost) and will be broken in production. Stop the dev server and run `npm run build` before generating.');
+        $hotFile = public_path('hot');
+        $hotFileHidden = public_path('hot.ssg-backup');
+
+        if ($this->files->exists($hotFile)) {
+            $this->files->move($hotFile, $hotFileHidden);
+            Partyline::line('<info>[✔]</info> Vite hot file temporarily moved aside for generation.');
         }
 
-        $this
-            ->bindGlide()
-            ->clearDirectory()
-            ->createContentFiles($urls)
-            ->createSymlinks()
-            ->copyFiles()
-            ->outputSummary();
+        try {
+            $this
+                ->bindGlide()
+                ->clearDirectory()
+                ->createContentFiles($urls)
+                ->createSymlinks()
+                ->copyFiles()
+                ->outputSummary();
 
-        if ($this->after) {
-            call_user_func($this->after);
+            if ($this->after) {
+                call_user_func($this->after);
+            }
+        } finally {
+            if ($this->files->exists($hotFileHidden)) {
+                $this->files->move($hotFileHidden, $hotFile);
+            }
         }
     }
 

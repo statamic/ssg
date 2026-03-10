@@ -454,24 +454,42 @@ EOT
     }
 
     #[Test]
-    public function it_warns_when_vite_hot_file_is_present()
+    public function it_temporarily_moves_vite_hot_file_aside_during_generation()
     {
         $hotFile = public_path('hot');
+        $hotFileHidden = public_path('hot.ssg-backup');
 
         $this->files->put($hotFile, 'http://localhost:5173');
 
         $this->artisan('statamic:ssg:generate', ['--no-interaction' => true])
-            ->expectsOutputToContain('Vite hot file detected');
+            ->expectsOutputToContain('Vite hot file temporarily moved aside');
+
+        $this->assertTrue($this->files->exists($hotFile));
+        $this->assertFalse($this->files->exists($hotFileHidden));
 
         $this->files->delete($hotFile);
     }
 
     #[Test]
-    public function it_does_not_warn_when_vite_hot_file_is_absent()
+    public function it_restores_vite_hot_file_even_if_generation_fails()
     {
-        $this->assertFalse($this->files->exists(public_path('hot')));
+        $hotFile = public_path('hot');
+        $hotFileHidden = public_path('hot.ssg-backup');
 
-        $this->artisan('statamic:ssg:generate', ['--no-interaction' => true])
-            ->doesntExpectOutputToContain('Vite hot file detected');
+        $this->files->put($hotFile, 'http://localhost:5173');
+
+        $this->partialMock(Filesystem::class)
+            ->shouldReceive('copyDirectory')
+            ->andThrow(new \Exception('Simulated failure'));
+
+        try {
+            $this->artisan('statamic:ssg:generate', ['--no-interaction' => true]);
+        } catch (\Exception) {
+        }
+
+        $this->assertTrue($this->files->exists($hotFile));
+        $this->assertFalse($this->files->exists($hotFileHidden));
+
+        $this->files->delete($hotFile);
     }
 }
