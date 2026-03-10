@@ -169,6 +169,12 @@ class Generator
         foreach ($this->config['copy'] ?? [] as $source => $dest) {
             $dest = $this->config['destination'].'/'.$dest;
 
+            if (! $this->files->exists($source)) {
+                Partyline::line("<fg=yellow>[!]</> $source was not copied because it does not exist.");
+
+                continue;
+            }
+
             if (is_file($source)) {
                 $this->files->copy($source, $dest);
             } else {
