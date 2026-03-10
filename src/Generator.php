@@ -99,6 +99,10 @@ class Generator
             $this->disableClear = true;
         }
 
+        if ($this->files->exists(public_path('hot'))) {
+            Partyline::warn('<fg=yellow>[!]</> Vite hot file detected (public/hot). Asset URLs in your generated HTML will point to the Vite dev server (localhost) and will be broken in production. Stop the dev server and run `npm run build` before generating.');
+        }
+
         $this
             ->bindGlide()
             ->clearDirectory()

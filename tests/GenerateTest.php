@@ -452,4 +452,26 @@ EOT
         $this->artisan('statamic:ssg:generate', ['--no-interaction' => true])
             ->expectsOutputToContain('was not copied because it does not exist');
     }
+
+    #[Test]
+    public function it_warns_when_vite_hot_file_is_present()
+    {
+        $hotFile = public_path('hot');
+
+        $this->files->put($hotFile, 'http://localhost:5173');
+
+        $this->artisan('statamic:ssg:generate', ['--no-interaction' => true])
+            ->expectsOutputToContain('Vite hot file detected');
+
+        $this->files->delete($hotFile);
+    }
+
+    #[Test]
+    public function it_does_not_warn_when_vite_hot_file_is_absent()
+    {
+        $this->assertFalse($this->files->exists(public_path('hot')));
+
+        $this->artisan('statamic:ssg:generate', ['--no-interaction' => true])
+            ->doesntExpectOutputToContain('Vite hot file detected');
+    }
 }
