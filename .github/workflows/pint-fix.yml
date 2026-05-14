@@ -15,15 +15,15 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           ref: ${{ github.head_ref }}
           token: ${{ secrets.PINT }}
 
       - name: Fix PHP code style issues
-        uses: aglipanci/laravel-pint-action@1.0.0
+        uses: aglipanci/laravel-pint-action@643466ad03b726047b3c78b531be5ec7835429ff # 1.0.0
 
       - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v4
+        uses: stefanzweifel/git-auto-commit-action@3ea6ae190baf489ba007f7c92608f33ce20ef04a # v4
         with:
           commit_message: Fix styling
