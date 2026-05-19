@@ -14,7 +14,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Check PHP code style issues
-        uses: aglipanci/laravel-pint-action@61f2bc4f4d5da076029d370fa2f268fd6b298041 # 2.3.1
+        uses: aglipanci/laravel-pint-action@36de00d5f5a8a4e12d443e01671daa12a18f4c79 # 2.6
         with:
           testMode: true
           verboseMode: true
