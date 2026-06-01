@@ -1,10 +1,12 @@
 name: Run Tests
 
-on:
+on: # zizmor: ignore[concurrency-limits]
   push:
   pull_request:
   schedule:
     - cron: '0 0 * * *'
+
+permissions: {}
 
 jobs:
   php-tests:
@@ -27,6 +29,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Setup PHP
         uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # v2
@@ -36,19 +40,32 @@ jobs:
           coverage: none
 
       - name: Install dependencies
+        env:
+          LARAVEL: ${{ matrix.laravel }}
+          STABILITY: ${{ matrix.stability }}
         run: |
-          composer require "illuminate/contracts:${{ matrix.laravel }}" --no-interaction --no-update
-          composer update --${{ matrix.stability }} --prefer-dist --no-interaction --no-suggest
+          composer require "illuminate/contracts:$LARAVEL" --no-interaction --no-update
+          composer update --$STABILITY --prefer-dist --no-interaction --no-suggest
 
       - name: Execute tests
         run: vendor/bin/phpunit
 
       - name: Send Slack notification
-        uses: 8398a7/action-slack@db35ed13d63ce3d2ab6acb86604a1daeaa038628 # v2.4.0
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
         if: failure() && github.event_name == 'schedule'
         with:
-          status: ${{ job.status }}
-          author_name: ${{ github.actor }}
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "Scheduled tests failed in ${{ github.repository }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":x: *Scheduled tests failed*\nRepository: ${{ github.repository }}\nTriggered by: ${{ github.actor }}\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View run>"
+                  }
+                }
+              ]
+            }
