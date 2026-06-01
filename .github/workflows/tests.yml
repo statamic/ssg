@@ -40,6 +40,7 @@ jobs:
           coverage: none
 
       - name: Install dependencies
+        shell: bash
         env:
           LARAVEL: ${{ matrix.laravel }}
           STABILITY: ${{ matrix.stability }}
