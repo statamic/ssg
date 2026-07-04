@@ -429,7 +429,7 @@ class Generator
         // Set the locale for dates, carbon, and for the translator.
         // This is what happens in Statamic's Localize middleware.
         setlocale(LC_TIME, $site->locale());
-        app()->setLocale($site->shortLocale());
+        app()->setLocale($site->lang());
     }
 
     protected function checkConcurrencySupport()
