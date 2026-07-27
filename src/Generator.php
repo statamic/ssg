@@ -27,6 +27,8 @@ use Statamic\Statamic;
 use Statamic\Support\Str;
 use Wilderborn\Partyline\Facade as Partyline;
 
+use function Laravel\Prompts\spin;
+
 class Generator
 {
     protected $app;
@@ -154,10 +156,10 @@ class Generator
             $dest = $this->config['destination'].'/'.$dest;
 
             if ($this->files->exists($dest)) {
-                Partyline::line("Symlink not created. $dest already exists.");
+                Partyline::outputComponents()->twoColumnDetail("$source symlinked to $dest", '<fg=blue;options=bold>SKIPPED. SYMLINK ALREADY EXISTS</>');
             } else {
                 $this->files->link($source, $dest);
-                Partyline::line("<info>[✔]</info> $source symlinked to $dest");
+                Partyline::outputComponents()->twoColumnDetail("$source symlinked to $dest", '<fg=green;options=bold>SUCCESS</>');
             }
         }
 
@@ -175,7 +177,7 @@ class Generator
                 $this->files->copyDirectory($source, $dest);
             }
 
-            Partyline::line("<info>[✔]</info> $source copied to $dest");
+            Partyline::outputComponents()->twoColumnDetail("$source copied to $dest", '<fg=green;options=bold>SUCCESS</>');
         }
 
         return $this;
@@ -195,7 +197,7 @@ class Generator
             $pages = $pages->shuffle();
         }
 
-        Partyline::line("Generating {$pages->count()} content files...");
+        Partyline::outputComponents()->info("Generating {$pages->count()} content files...");
 
         $closures = $this->makeContentGenerationClosures($pages, $request);
 
@@ -236,11 +238,12 @@ class Generator
                 ->reject(fn ($page) => $this->shouldRejectPage($page, true));
         }
 
-        Partyline::line('Gathering content to be generated...');
+        $pages = spin(
+            fn () => $this->gatherAllPages(),
+            'Gathering content to be generated...',
+        );
 
-        $pages = $this->gatherAllPages();
-
-        Partyline::line("\x1B[1A\x1B[2K<info>[✔]</info> Gathered content to be generated");
+        Partyline::outputComponents()->info('Gathered content to be generated');
 
         return $pages;
     }
@@ -282,7 +285,11 @@ class Generator
 
                     $request->setPage($page);
 
-                    Partyline::line("\x1B[1A\x1B[2KGenerating ".$page->url());
+                    // Only write the "Generating" line when using a single worker.
+                    // Otherwise, the output will be messed up.
+                    if ($this->workers === 1) {
+                        $this->writeGeneratingLine($page->url());
+                    }
 
                     try {
                         $generated = $page->generate($request);
@@ -290,6 +297,12 @@ class Generator
                         if ($this->shouldFail($e)) {
                             return $e->consoleMessage();
                         }
+
+                        if ($this->workers === 1) {
+                            $this->clearCurrentLine();
+                        }
+
+                        Partyline::outputComponents()->twoColumnDetail($page->url(), '<fg=red;options=bold>FAILED</>');
 
                         $errors[] = $e->consoleMessage();
 
@@ -306,6 +319,12 @@ class Generator
                         $warnings[] = $generated->consoleMessage();
                     }
 
+                    if ($this->workers === 1) {
+                        $this->clearCurrentLine();
+                    }
+
+                    Partyline::outputComponents()->twoColumnDetail($page->url(), '<fg=green;options=bold>SUCCESS</>');
+
                     Blink::flush();
                 }
 
@@ -320,24 +339,25 @@ class Generator
 
         $successCount = $results['count'] - $results['errors']->count();
 
-        Partyline::line("\x1B[1A\x1B[2K<info>[✔]</info> Generated {$successCount} content files");
+        Partyline::newLine();
+        Partyline::outputComponents()->success("Generated {$successCount} content files");
 
-        $results['warnings']->merge($results['errors'])->each(fn ($error) => Partyline::line($error));
+        $results['warnings']->each(fn ($warning) => Partyline::outputComponents()->warn($warning));
+        $results['errors']->each(fn ($error) => Partyline::outputComponents()->error($error));
     }
 
     protected function outputSummary()
     {
-        Partyline::info('');
-        Partyline::info('Static site generated into '.$this->config['destination']);
+        Partyline::outputComponents()->success('Static site generated into '.$this->config['destination']);
 
         $total = $this->taskResults['count'];
 
         if ($errors = count($this->taskResults['errors'])) {
-            Partyline::warn("[!] {$errors}/{$total} pages not generated");
+            Partyline::outputComponents()->warn("{$errors}/{$total} pages not generated");
         }
 
         if ($warnings = count($this->taskResults['warnings'])) {
-            Partyline::warn("[!] {$warnings}/{$total} pages generated with warnings");
+            Partyline::outputComponents()->warn("{$warnings}/{$total} pages generated with warnings");
         }
     }
 
@@ -438,7 +458,7 @@ class Generator
             return;
         }
 
-        throw new \RuntimeException('To use multiple workers, you must install PHP 8 and spatie/fork.');
+        throw new \RuntimeException('To use multiple workers, you must install spatie/fork.');
     }
 
     protected function shouldFail($item)
@@ -499,5 +519,27 @@ class Generator
         $factory->setAccessible(true);
 
         return Arr::get($factory->invoke($date)->getSettings(), 'toStringFormat');
+    }
+
+    /**
+     * Outputs a "Generating" line to the terminal. Very similar output-wise to Laravel's
+     * ->twoColumnDetail() method, but it allows for replacing the line later, for
+     * success/error statuses.
+     */
+    private function writeGeneratingLine(string $url): void
+    {
+        $dotsLen = max(1, 150 - strlen($url) - strlen('GENERATING') - 6);
+
+        $line = sprintf("  %s \033[90m%s\033[0m \033[34;1mGENERATING\033[0m",
+            $url,
+            str_repeat('.', $dotsLen)
+        );
+
+        fwrite(STDERR, $line);
+    }
+
+    private function clearCurrentLine(): void
+    {
+        fwrite(STDERR, "\r\x1B[2K");
     }
 }
