@@ -47,6 +47,8 @@ class GenerateTest extends TestCase
         URL::enforceTrailingSlashes(false);
         URL::clearUrlCache();
 
+        $this->files->delete([lang_path('en_US.json'), lang_path('fr_FR.json')]);
+
         parent::tearDown();
     }
 
@@ -310,6 +312,35 @@ EOT
         $this->assertStringContainsString('Current Page: 2', $index);
         $this->assertStringContainsString('Total Pages: 2', $index);
         $this->assertStringContainsString('Prev Link: /fr/le-articles/page/1', $index);
+    }
+
+    #[Test]
+    public function it_translates_using_the_site_lang()
+    {
+        Site::setSites([
+            'default' => [
+                'name' => 'English',
+                'locale' => 'en_US',
+                'lang' => 'en_US',
+                'url' => '/',
+            ],
+            'french' => [
+                'name' => 'French',
+                'locale' => 'fr_FR',
+                'lang' => 'fr_FR',
+                'url' => '/fr/',
+            ],
+        ]);
+
+        $this->files->put(lang_path('en_US.json'), json_encode(['welcome' => 'Welcome']));
+        $this->files->put(lang_path('fr_FR.json'), json_encode(['welcome' => 'Bienvenue']));
+
+        $this->files->put(resource_path('views/default.antlers.html'), '<h1>{{ trans key="welcome" }}</h1>');
+
+        $files = $this->generate();
+
+        $this->assertStringContainsString('<h1>Welcome</h1>', $files['index.html']);
+        $this->assertStringContainsString('<h1>Bienvenue</h1>', $files['fr/index.html']);
     }
 
     #[Test]
