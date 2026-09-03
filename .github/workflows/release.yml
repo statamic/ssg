@@ -1,0 +1,84 @@
+name: Create Release
+
+on: # zizmor: ignore[concurrency-limits]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version, without the v prefix (e.g. 1.2.0)'
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    environment: Releases
+    permissions: {} # all writes go through the App token; GITHUB_TOKEN needs no scopes
+    steps:
+      - name: Resolve and validate version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          version="${INPUT_VERSION#v}"
+
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
+            echo "::error::Version must look like 1.2.0 (got: $INPUT_VERSION)"
+            exit 1
+          fi
+
+          if [[ "$BRANCH" =~ ^[0-9]+\.x$ ]] && [ "${version%%.*}" != "${BRANCH%%.*}" ]; then
+            echo "::error::Version $version does not belong on the $BRANCH branch"
+            exit 1
+          fi
+
+          echo "TAG=v$version" >> "$GITHUB_ENV"
+
+      - name: Get release bot token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          persist-credentials: true # zizmor: ignore[artipacked] App token is needed to push the tag
+
+      - name: Assert tag does not already exist
+        run: |
+          existing="$(git ls-remote --tags origin "$TAG")"
+          [ -z "$existing" ] || { echo "::error::Tag $TAG already exists on remote. Aborting."; exit 1; }
+
+      - name: Tag and push
+        run: |
+          git tag "$TAG"
+          git push origin "$TAG"
+
+      - name: Get Changelog
+        id: changelog
+        uses: statamic/changelog-action@5d112d0d790cdeeb5adca3e584e37edc474ab51b # v1.0.2
+        with:
+          version: ${{ env.TAG }}
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          RELEASE_NOTES: ${{ steps.changelog.outputs.text }}
+          IS_DEFAULT_BRANCH: ${{ github.ref_name == github.event.repository.default_branch }}
+        run: |
+          latest="$IS_DEFAULT_BRANCH"
+          prerelease=false
+          case "$TAG" in
+            *-*) prerelease=true; latest=false ;;
+          esac
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --notes "$RELEASE_NOTES" \
+            --latest="$latest" \
+            --prerelease="$prerelease"
