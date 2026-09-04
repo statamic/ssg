@@ -165,6 +165,7 @@ Deployments are triggered by committing to Git and pushing to GitHub.
 - Set build command to `php please ssg:generate`
     - If you need to compile css/js, be sure to add that command too and execute it before generating the static site folder
     - ie. `npm install && npm run build && php please ssg:generate`
+    - **Important:** ensure `public/hot` is not present when generating. This file is created by `npm run dev` and causes Vite to serve assets from the dev server (localhost) instead of the production build, resulting in broken asset URLs in your generated HTML. Always use `npm run build` and never commit `public/hot` to version control.
 - Set publish directory to `storage/app/static`
 - Add `APP_KEY` env variable, by running `php artisan key:generate` locally, and copying from your `.env`
     - ie. `APP_KEY` `your-app-key-value`

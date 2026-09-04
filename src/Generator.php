@@ -99,16 +99,30 @@ class Generator
             $this->disableClear = true;
         }
 
-        $this
-            ->bindGlide()
-            ->clearDirectory()
-            ->createContentFiles($urls)
-            ->createSymlinks()
-            ->copyFiles()
-            ->outputSummary();
+        $hotFile = public_path('hot');
+        $hotFileHidden = public_path('hot.ssg-backup');
 
-        if ($this->after) {
-            call_user_func($this->after);
+        if ($this->files->exists($hotFile)) {
+            $this->files->move($hotFile, $hotFileHidden);
+            Partyline::line('<info>[✔]</info> Vite hot file temporarily moved aside for generation.');
+        }
+
+        try {
+            $this
+                ->bindGlide()
+                ->clearDirectory()
+                ->createContentFiles($urls)
+                ->createSymlinks()
+                ->copyFiles()
+                ->outputSummary();
+
+            if ($this->after) {
+                call_user_func($this->after);
+            }
+        } finally {
+            if ($this->files->exists($hotFileHidden)) {
+                $this->files->move($hotFileHidden, $hotFile);
+            }
         }
     }
 
@@ -168,6 +182,12 @@ class Generator
     {
         foreach ($this->config['copy'] ?? [] as $source => $dest) {
             $dest = $this->config['destination'].'/'.$dest;
+
+            if (! $this->files->exists($source)) {
+                Partyline::line("<fg=yellow>[!]</> $source was not copied because it does not exist.");
+
+                continue;
+            }
 
             if (is_file($source)) {
                 $this->files->copy($source, $dest);

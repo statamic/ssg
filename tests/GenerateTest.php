@@ -423,4 +423,73 @@ EOT
 
         $this->assertStringContainsString('<h1>404!</h1>', $files['404.html']);
     }
+
+    #[Test]
+    public function it_copies_files_and_directories_to_destination()
+    {
+        $source = public_path('build');
+
+        $this->files->makeDirectory($source, 0755, true);
+        $this->files->put($source.'/site.css', 'body { color: red; }');
+
+        Config::set('statamic.ssg.copy', [$source => 'build']);
+
+        $this->generate();
+
+        $this->assertTrue($this->files->exists($this->destination.'/build/site.css'));
+        $this->assertEquals('body { color: red; }', $this->files->get($this->destination.'/build/site.css'));
+
+        $this->files->deleteDirectory($source);
+    }
+
+    #[Test]
+    public function it_warns_when_copy_source_does_not_exist()
+    {
+        $nonExistentSource = public_path('build-does-not-exist');
+
+        Config::set('statamic.ssg.copy', [$nonExistentSource => 'build']);
+
+        $this->artisan('statamic:ssg:generate', ['--no-interaction' => true])
+            ->expectsOutputToContain('was not copied because it does not exist');
+    }
+
+    #[Test]
+    public function it_temporarily_moves_vite_hot_file_aside_during_generation()
+    {
+        $hotFile = public_path('hot');
+        $hotFileHidden = public_path('hot.ssg-backup');
+
+        $this->files->put($hotFile, 'http://localhost:5173');
+
+        $this->artisan('statamic:ssg:generate', ['--no-interaction' => true])
+            ->expectsOutputToContain('Vite hot file temporarily moved aside');
+
+        $this->assertTrue($this->files->exists($hotFile));
+        $this->assertFalse($this->files->exists($hotFileHidden));
+
+        $this->files->delete($hotFile);
+    }
+
+    #[Test]
+    public function it_restores_vite_hot_file_even_if_generation_fails()
+    {
+        $hotFile = public_path('hot');
+        $hotFileHidden = public_path('hot.ssg-backup');
+
+        $this->files->put($hotFile, 'http://localhost:5173');
+
+        $this->partialMock(Filesystem::class)
+            ->shouldReceive('copyDirectory')
+            ->andThrow(new \Exception('Simulated failure'));
+
+        try {
+            $this->artisan('statamic:ssg:generate', ['--no-interaction' => true]);
+        } catch (\Exception) {
+        }
+
+        $this->assertTrue($this->files->exists($hotFile));
+        $this->assertFalse($this->files->exists($hotFileHidden));
+
+        $this->files->delete($hotFile);
+    }
 }
