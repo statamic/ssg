@@ -65,7 +65,9 @@ class Page
         $html = $response->getContent();
 
         if (! $this->files->exists($this->directory())) {
-            $this->files->makeDirectory($this->directory(), 0755, true);
+            // Force the creation, since when running with multiple workers,
+            // another worker may have created the directory in the meantime.
+            $this->files->makeDirectory($this->directory(), 0755, true, true);
         }
 
         $this->files->put($this->path(), $html);
