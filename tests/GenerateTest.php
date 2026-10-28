@@ -6,6 +6,7 @@ use Illuminate\Filesystem\Filesystem;
 use PHPUnit\Framework\Attributes\Test;
 use Statamic\Facades\Config;
 use Statamic\Facades\URL;
+use Statamic\StaticSite\SSG;
 use Tests\Concerns\RunsGeneratorCommand;
 
 class GenerateTest extends TestCase
@@ -422,5 +423,61 @@ EOT
         $this->assertContains('404.html', array_keys($files));
 
         $this->assertStringContainsString('<h1>404!</h1>', $files['404.html']);
+    }
+
+    #[Test]
+    public function it_runs_every_after_callback()
+    {
+        $called = [];
+
+        SSG::after(function () use (&$called) {
+            $called[] = 'first';
+        });
+
+        SSG::after(function () use (&$called) {
+            $called[] = 'second';
+        });
+
+        $this->generate();
+
+        $this->assertEquals(['first', 'second'], $called);
+    }
+
+    #[Test]
+    public function it_replaces_an_after_callback_registered_with_the_same_id()
+    {
+        $called = [];
+
+        SSG::after(function () use (&$called) {
+            $called[] = 'original';
+        }, 'redirects');
+
+        SSG::after(function () use (&$called) {
+            $called[] = 'replacement';
+        }, 'redirects');
+
+        $this->generate();
+
+        $this->assertEquals(['replacement'], $called);
+    }
+
+    #[Test]
+    public function it_skips_after_callbacks()
+    {
+        $called = [];
+
+        SSG::after(function () use (&$called) {
+            $called[] = 'redirects';
+        }, 'redirects');
+
+        SSG::after(function () use (&$called) {
+            $called[] = 'deploy';
+        });
+
+        SSG::skipAfter('redirects');
+
+        $this->generate();
+
+        $this->assertEquals(['deploy'], $called);
     }
 }
