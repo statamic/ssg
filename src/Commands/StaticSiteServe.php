@@ -33,7 +33,7 @@ class StaticSiteServe extends Command
     /**
      * The list of requests being handled and their start time.
      *
-     * @var array<int, \Illuminate\Support\Carbon>
+     * @var array<int, Carbon>
      */
     protected $requestsPool;
 
@@ -68,7 +68,7 @@ class StaticSiteServe extends Command
      * Start a new server process.
      *
      * @param  bool  $hasEnvironment
-     * @return \Symfony\Component\Process\Process
+     * @return Process
      */
     protected function startProcess()
     {
@@ -208,7 +208,7 @@ class StaticSiteServe extends Command
      * Get the date from the given PHP server output.
      *
      * @param  string  $line
-     * @return \Illuminate\Support\Carbon
+     * @return Carbon
      */
     protected function getDateFromLine($line)
     {
