@@ -3,6 +3,7 @@
 namespace Tests;
 
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Foundation\Vite;
 use PHPUnit\Framework\Attributes\Test;
 use Statamic\Facades\Config;
 use Statamic\Facades\URL;
@@ -16,6 +17,9 @@ class GenerateTest extends TestCase
     {
         URL::enforceTrailingSlashes(false);
         URL::clearUrlCache();
+
+        $this->files->delete(public_path('hot'));
+        $this->files->deleteDirectory(public_path('build'));
 
         parent::tearDown();
     }
@@ -422,5 +426,50 @@ EOT
         $this->assertContains('404.html', array_keys($files));
 
         $this->assertStringContainsString('<h1>404!</h1>', $files['404.html']);
+    }
+
+    #[Test]
+    public function it_copies_files_and_directories_to_destination()
+    {
+        $source = public_path('build');
+
+        $this->files->makeDirectory($source, 0755, true);
+        $this->files->put($source.'/site.css', 'body { color: red; }');
+
+        Config::set('statamic.ssg.copy', [$source => 'build']);
+
+        $this->generate();
+
+        $this->assertTrue($this->files->exists($this->destination.'/build/site.css'));
+        $this->assertEquals('body { color: red; }', $this->files->get($this->destination.'/build/site.css'));
+    }
+
+    #[Test]
+    public function it_warns_when_copy_source_does_not_exist()
+    {
+        $nonExistentSource = public_path('build-does-not-exist');
+
+        Config::set('statamic.ssg.copy', [$nonExistentSource => 'build']);
+
+        $this->artisan('statamic:ssg:generate', ['--no-interaction' => true])
+            ->expectsOutputToContain('was not copied because it does not exist');
+    }
+
+    #[Test]
+    public function it_ignores_vite_hot_file_during_generation()
+    {
+        $this->files->put(public_path('hot'), 'http://localhost:5173');
+        $this->files->makeDirectory(public_path('build'), 0755, true);
+        $this->files->put(public_path('build/manifest.json'), json_encode([
+            'resources/css/site.css' => ['file' => 'assets/site-abc123.css', 'src' => 'resources/css/site.css', 'isEntry' => true],
+        ]));
+
+        $this->files->put(resource_path('views/default.antlers.html'), '{{ vite src="resources/css/site.css" }}');
+
+        $files = $this->generate();
+
+        $this->assertStringContainsString('build/assets/site-abc123.css', $files['index.html']);
+        $this->assertStringNotContainsString('localhost:5173', $files['index.html']);
+        $this->assertTrue(app(Vite::class)->isRunningHot());
     }
 }
