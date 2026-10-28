@@ -9,6 +9,7 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\Vite as ViteFacade;
 use League\Flysystem\Filesystem as Flysystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use ReflectionClass;
@@ -40,7 +41,8 @@ class Generator
     protected $tasks;
     protected $config;
     protected $request;
-    protected $after;
+    protected $after = [];
+    protected $skipAfter = [];
     protected $extraUrls;
     protected $workers = 1;
     protected $earlyTaskErrors = [];
@@ -75,9 +77,20 @@ class Generator
         return $this;
     }
 
-    public function after($after)
+    public function after($after, ?string $id = null)
     {
-        $this->after = $after;
+        if ($id) {
+            $this->after[$id] = $after;
+        } else {
+            $this->after[] = $after;
+        }
+
+        return $this;
+    }
+
+    public function skipAfter(string $id)
+    {
+        $this->skipAfter[] = $id;
 
         return $this;
     }
@@ -104,6 +117,10 @@ class Generator
             $this->disableClear = true;
         }
 
+        $vite = ViteFacade::getFacadeRoot();
+
+        ViteFacade::swap(Vite::from($vite));
+
         $this
             ->bindGlide()
             ->clearDirectory()
@@ -112,9 +129,17 @@ class Generator
             ->copyFiles()
             ->outputSummary();
 
-        if ($this->after) {
-            call_user_func($this->after);
+        foreach ($this->after as $id => $after) {
+            if (in_array($id, $this->skipAfter, true)) {
+                Partyline::outputComponents()->info("Skipping [{$id}] after callback");
+
+                continue;
+            }
+
+            call_user_func($after);
         }
+
+        ViteFacade::swap($vite);
     }
 
     public function bindGlide()
@@ -181,6 +206,12 @@ class Generator
     {
         foreach ($this->config['copy'] ?? [] as $source => $dest) {
             $dest = $this->config['destination'].'/'.$dest;
+
+            if (! $this->files->exists($source)) {
+                Partyline::outputComponents()->warn("$source was not copied because it does not exist");
+
+                continue;
+            }
 
             if (is_file($source)) {
                 $this->files->copy($source, $dest);
