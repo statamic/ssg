@@ -112,7 +112,7 @@ You may give a callback an ID as the second argument. Registering another callba
 ```php
 SSG::after(function () {
     // eg. generate redirect pages
-}, 'redirects');
+}, id: 'redirects');
 ```
 
 You may also skip a callback registered by someone else, like an addon, using its ID:
