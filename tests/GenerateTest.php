@@ -2,13 +2,11 @@
 
 namespace Tests;
 
-use Exception;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Vite;
 use PHPUnit\Framework\Attributes\Test;
 use Statamic\Facades\Config;
 use Statamic\Facades\URL;
-use Statamic\StaticSite\Generator;
 use Tests\Concerns\RunsGeneratorCommand;
 
 class GenerateTest extends TestCase
@@ -472,21 +470,6 @@ EOT
 
         $this->assertStringContainsString('build/assets/site-abc123.css', $files['index.html']);
         $this->assertStringNotContainsString('localhost:5173', $files['index.html']);
-        $this->assertTrue(app(Vite::class)->isRunningHot());
-    }
-
-    #[Test]
-    public function it_restores_vite_even_if_generation_fails()
-    {
-        $this->files->put(public_path('hot'), 'http://localhost:5173');
-
-        app(Generator::class)->after(fn () => throw new Exception('Simulated failure'));
-
-        try {
-            $this->artisan('statamic:ssg:generate', ['--no-interaction' => true]);
-        } catch (Exception) {
-        }
-
         $this->assertTrue(app(Vite::class)->isRunningHot());
     }
 }

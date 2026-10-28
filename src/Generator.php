@@ -104,21 +104,19 @@ class Generator
 
         ViteFacade::swap(Vite::from($vite));
 
-        try {
-            $this
-                ->bindGlide()
-                ->clearDirectory()
-                ->createContentFiles($urls)
-                ->createSymlinks()
-                ->copyFiles()
-                ->outputSummary();
+        $this
+            ->bindGlide()
+            ->clearDirectory()
+            ->createContentFiles($urls)
+            ->createSymlinks()
+            ->copyFiles()
+            ->outputSummary();
 
-            if ($this->after) {
-                call_user_func($this->after);
-            }
-        } finally {
-            ViteFacade::swap($vite);
+        if ($this->after) {
+            call_user_func($this->after);
         }
+
+        ViteFacade::swap($vite);
     }
 
     public function bindGlide()
