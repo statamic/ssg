@@ -26,7 +26,12 @@ use Statamic\Imaging\ImageGenerator;
 use Statamic\Imaging\StaticUrlBuilder;
 use Statamic\Statamic;
 use Statamic\Support\Str;
+use Symfony\Component\Console\Formatter\OutputFormatter;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Terminal;
 use Wilderborn\Partyline\Facade as Partyline;
+
+use function Laravel\Prompts\spin;
 
 class Generator
 {
@@ -126,7 +131,7 @@ class Generator
 
         foreach ($this->after as $id => $after) {
             if (in_array($id, $this->skipAfter, true)) {
-                Partyline::line("<comment>Skipping [{$id}] after callback</comment>");
+                Partyline::outputComponents()->info("Skipping [{$id}] after callback");
 
                 continue;
             }
@@ -187,10 +192,10 @@ class Generator
             $dest = $this->config['destination'].'/'.$dest;
 
             if ($this->files->exists($dest)) {
-                Partyline::line("Symlink not created. $dest already exists.");
+                Partyline::outputComponents()->twoColumnDetail("$source symlinked to $dest", '<fg=blue;options=bold>SKIPPED. SYMLINK ALREADY EXISTS</>');
             } else {
                 $this->files->link($source, $dest);
-                Partyline::line("<info>[✔]</info> $source symlinked to $dest");
+                Partyline::outputComponents()->twoColumnDetail("$source symlinked to $dest", '<fg=green;options=bold>SUCCESS</>');
             }
         }
 
@@ -203,7 +208,7 @@ class Generator
             $dest = $this->config['destination'].'/'.$dest;
 
             if (! $this->files->exists($source)) {
-                Partyline::line("<fg=yellow>[!]</> $source was not copied because it does not exist.");
+                Partyline::outputComponents()->warn("$source was not copied because it does not exist");
 
                 continue;
             }
@@ -214,7 +219,7 @@ class Generator
                 $this->files->copyDirectory($source, $dest);
             }
 
-            Partyline::line("<info>[✔]</info> $source copied to $dest");
+            Partyline::outputComponents()->twoColumnDetail("$source copied to $dest", '<fg=green;options=bold>SUCCESS</>');
         }
 
         return $this;
@@ -234,14 +239,14 @@ class Generator
             $pages = $pages->shuffle();
         }
 
-        Partyline::line("Generating {$pages->count()} content files...");
+        Partyline::outputComponents()->info("Generating {$pages->count()} content files...");
 
         $closures = $this->makeContentGenerationClosures($pages, $request);
 
         $results = $this->tasks->run(...$closures);
 
         if ($message = $this->firstFailedTask($results)) {
-            throw GenerationFailedException::withConsoleMessage("\x1B[1A\x1B[2K".$message);
+            throw GenerationFailedException::withConsoleMessage($message);
         }
 
         $this->taskResults = $this->compileTasksResults($results);
@@ -275,13 +280,20 @@ class Generator
                 ->reject(fn ($page) => $this->shouldRejectPage($page, true));
         }
 
-        Partyline::line('Gathering content to be generated...');
+        $pages = $this->outputIsDecorated()
+            ? spin(fn () => $this->gatherAllPages(), 'Gathering content to be generated...')
+            : $this->gatherAllPages();
 
-        $pages = $this->gatherAllPages();
-
-        Partyline::line("\x1B[1A\x1B[2K<info>[✔]</info> Gathered content to be generated");
+        Partyline::outputComponents()->info('Gathered content to be generated');
 
         return $pages;
+    }
+
+    private function outputIsDecorated(): bool
+    {
+        $output = Partyline::getOutput();
+
+        return $output instanceof OutputInterface && $output->isDecorated();
     }
 
     protected function gatherAllPages()
@@ -322,13 +334,17 @@ class Generator
 
                     $request->setPage($page);
 
-                    if ($verbose) {
-                        Partyline::line("\x1B[1A\x1B[2KGenerating ".$page->url());
-                    }
+                    $this->writeGeneratingLine($page->url());
 
                     try {
                         $generated = $page->generate($request);
                     } catch (NotGeneratedException $e) {
+                        $this->clearGeneratingLine();
+
+                        if ($verbose) {
+                            Partyline::outputComponents()->twoColumnDetail($page->url(), '<fg=red;options=bold>FAILED</>');
+                        }
+
                         if ($this->shouldFail($e)) {
                             return $e->consoleMessage();
                         }
@@ -340,12 +356,22 @@ class Generator
                         Carbon::setToStringFormat($oldCarbonFormat);
                     }
 
+                    $this->clearGeneratingLine();
+
                     if ($generated->hasWarning()) {
                         if ($this->shouldFail($generated)) {
+                            if ($verbose) {
+                                Partyline::outputComponents()->twoColumnDetail($page->url(), '<fg=red;options=bold>FAILED</>');
+                            }
+
                             return $generated->consoleMessage();
                         }
 
                         $warnings[] = $generated->consoleMessage();
+                    }
+
+                    if ($verbose) {
+                        Partyline::outputComponents()->twoColumnDetail($page->url(), '<fg=green;options=bold>SUCCESS</>');
                     }
 
                     Blink::flush();
@@ -356,30 +382,68 @@ class Generator
         })->all();
     }
 
+    /**
+     * Outputs a "Generating" line to the terminal. Very similar output-wise to Laravel's
+     * ->twoColumnDetail() method, but it allows for replacing the line later, for
+     * success/error statuses.
+     */
+    private function writeGeneratingLine(string $url): void
+    {
+        if (! $this->shouldWriteGeneratingLine()) {
+            return;
+        }
+
+        $width = min((new Terminal)->getWidth(), 150);
+        $dotCount = max(1, $width - mb_strwidth($url) - mb_strwidth('GENERATING') - 6);
+
+        Partyline::getOutput()->write(sprintf(
+            '  %s <fg=gray>%s</> <fg=blue;options=bold>GENERATING</>',
+            OutputFormatter::escape($url),
+            str_repeat('.', $dotCount),
+        ));
+    }
+
+    private function clearGeneratingLine(): void
+    {
+        if (! $this->shouldWriteGeneratingLine()) {
+            return;
+        }
+
+        Partyline::getOutput()->write("\r\x1B[2K");
+    }
+
+    private function shouldWriteGeneratingLine(): bool
+    {
+        return config('statamic.ssg.verbose')
+            && $this->workers === 1
+            && $this->outputIsDecorated();
+    }
+
     protected function outputTasksResults()
     {
         $results = $this->taskResults;
 
         $successCount = $results['count'] - $results['errors']->count();
 
-        Partyline::line("\x1B[1A\x1B[2K<info>[✔]</info> Generated {$successCount} content files");
+        Partyline::newLine();
+        Partyline::outputComponents()->success("Generated {$successCount} content files");
 
-        $results['warnings']->merge($results['errors'])->each(fn ($error) => Partyline::line($error));
+        $results['warnings']->each(fn ($warning) => Partyline::outputComponents()->warn($warning));
+        $results['errors']->each(fn ($error) => Partyline::outputComponents()->error($error));
     }
 
     protected function outputSummary()
     {
-        Partyline::info('');
-        Partyline::info('Static site generated into '.$this->config['destination']);
+        Partyline::outputComponents()->success('Static site generated into '.$this->config['destination']);
 
         $total = $this->taskResults['count'];
 
         if ($errors = count($this->taskResults['errors'])) {
-            Partyline::warn("[!] {$errors}/{$total} pages not generated");
+            Partyline::outputComponents()->warn("{$errors}/{$total} pages not generated");
         }
 
         if ($warnings = count($this->taskResults['warnings'])) {
-            Partyline::warn("[!] {$warnings}/{$total} pages generated with warnings");
+            Partyline::outputComponents()->warn("{$warnings}/{$total} pages generated with warnings");
         }
     }
 
@@ -480,7 +544,7 @@ class Generator
             return;
         }
 
-        throw new \RuntimeException('To use multiple workers, you must install PHP 8 and spatie/fork.');
+        throw new \RuntimeException('To use multiple workers, you must install spatie/fork.');
     }
 
     protected function shouldFail($item)
@@ -521,7 +585,7 @@ class Generator
         $excluded = in_array($page->url(), $this->config['exclude']);
 
         if ($excluded && $outputError) {
-            $this->earlyTaskErrors[] = '<fg=red>[✘]</> '.URL::makeRelative($page->url()).' (Excluded in config/statamic/ssg.php)';
+            $this->earlyTaskErrors[] = URL::makeRelative($page->url()).' (Excluded in config/statamic/ssg.php)';
         }
 
         return $excluded;

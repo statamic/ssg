@@ -35,11 +35,7 @@ class GeneratedPage
 
     public function consoleMessage()
     {
-        $message = vsprintf('%s%s %s', [
-            "\x1B[1A\x1B[2K",
-            $this->hasWarning() ? '<comment>[!]</comment>' : '<info>[✔]</info>',
-            $this->url(),
-        ]);
+        $message = $this->url();
 
         if ($this->isRedirect()) {
             $message .= sprintf(' (Resulted in a redirect to %s)', $this->response->getTargetUrl());
