@@ -34,7 +34,7 @@ jobs:
             exit 1
           fi
 
-          echo "TAG=v$version" >> "$GITHUB_ENV"
+          echo "TAG=$version" >> "$GITHUB_ENV"
 
       - name: Get release bot token
         id: app-token
