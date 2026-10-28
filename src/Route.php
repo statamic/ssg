@@ -41,7 +41,7 @@ class Route
         $kernel->terminate($request, $response);
 
         if ($e = $response->exception) {
-            if ($response->status() === 404 && $this->url() === '/404') {
+            if ($response->status() === 404 && $this->url() === URL::tidy('/404')) {
                 return $response;
             }
 

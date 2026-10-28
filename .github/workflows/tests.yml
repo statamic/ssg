@@ -1,10 +1,12 @@
 name: Run Tests
 
-on:
+on: # zizmor: ignore[concurrency-limits]
   push:
   pull_request:
   schedule:
     - cron: '0 0 * * *'
+
+permissions: {}
 
 jobs:
   php-tests:
@@ -12,54 +14,59 @@ jobs:
 
     strategy:
       matrix:
-        php: [8.1, 8.2, 8.3, 8.4]
-        laravel: [10.*, 11.*, 12.*]
+        php: [8.3, 8.4, 8.5]
+        laravel: [12.*, 13.*]
         stability: [prefer-lowest, prefer-stable]
         os: [ubuntu-latest]
         include:
           - os: windows-latest
-            php: 8.3
-            laravel: 10.*
+            php: 8.5
+            laravel: 13.*
             stability: prefer-stable
-          - os: windows-latest
-            php: 8.3
-            laravel: 11.*
-            stability: prefer-stable
-        exclude:
-          - php: 8.1
-            laravel: 11.*
-          - php: 8.1
-            laravel: 12.*
-          - php: 8.4
-            laravel: 10.*
 
     name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: ${{ matrix.php }}
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
           coverage: none
 
       - name: Install dependencies
+        shell: bash
+        env:
+          LARAVEL: ${{ matrix.laravel }}
+          STABILITY: ${{ matrix.stability }}
         run: |
-          composer require "illuminate/contracts:${{ matrix.laravel }}" --no-interaction --no-update
-          composer update --${{ matrix.stability }} --prefer-dist --no-interaction --no-suggest
+          composer require "illuminate/contracts:$LARAVEL" --no-interaction --no-update
+          composer update --$STABILITY --prefer-dist --no-interaction --no-suggest
 
       - name: Execute tests
         run: vendor/bin/phpunit
 
       - name: Send Slack notification
-        uses: 8398a7/action-slack@v2
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
         if: failure() && github.event_name == 'schedule'
         with:
-          status: ${{ job.status }}
-          author_name: ${{ github.actor }}
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "Scheduled tests failed in ${{ github.repository }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":x: *Scheduled tests failed*\nRepository: ${{ github.repository }}\nTriggered by: ${{ github.actor }}\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View run>"
+                  }
+                }
+              ]
+            }

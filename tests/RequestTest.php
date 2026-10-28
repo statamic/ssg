@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\Test;
 use Statamic\Entries\Collection;
 use Statamic\Entries\Entry;
 use Statamic\Facades\Site;
@@ -10,14 +11,14 @@ use Statamic\StaticSite\Request;
 
 class RequestTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function gets_scheme()
     {
         $this->assertEquals('http', (new Request)->setConfig(['base_url' => 'http://test.com'])->getScheme());
         $this->assertEquals('https', (new Request)->setConfig(['base_url' => 'https://test.com'])->getScheme());
     }
 
-    /** @test */
+    #[Test]
     public function gets_http_host()
     {
         $this->assertEquals('test.com', (new Request)->setConfig(['base_url' => 'http://test.com'])->getHttpHost());
@@ -26,7 +27,7 @@ class RequestTest extends TestCase
         $this->assertEquals('test.com', (new Request)->setConfig(['base_url' => 'https://test.com/subdirectory/'])->getHttpHost());
     }
 
-    /** @test */
+    #[Test]
     public function gets_base_url()
     {
         $this->assertEquals('', (new Request)->setConfig(['base_url' => 'http://test.com'])->getBaseUrl());
@@ -35,7 +36,7 @@ class RequestTest extends TestCase
         $this->assertEquals('/subdirectory', (new Request)->setConfig(['base_url' => 'http://test.com/subdirectory/'])->getBaseUrl());
     }
 
-    /** @test */
+    #[Test]
     public function gets_path()
     {
         // The current site needs to be explicitly set, otherwise it will try to
@@ -55,7 +56,7 @@ class RequestTest extends TestCase
         $this->assertEquals('foo', $request->path());
     }
 
-    /** @test */
+    #[Test]
     public function it_can_forget_query_param()
     {
         $request = new Request;
