@@ -1,0 +1,10 @@
+name: Feature Request
+description: Got an idea for a new feature or improvement in the SSG? We'd love to hear it!
+labels: [feature request]
+body:
+  - type: textarea
+    attributes:
+      label: Description
+      description: What feature or improvement would you like to see? Feel free to provide as much detail as you can.
+    validations:
+      required: true

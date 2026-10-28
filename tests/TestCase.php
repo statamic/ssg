@@ -4,7 +4,9 @@ namespace Tests;
 
 use Illuminate\Filesystem\Filesystem;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
+use Statamic\Providers\StatamicServiceProvider;
 use Statamic\Statamic;
+use Wilderborn\Partyline\ServiceProvider;
 
 class TestCase extends OrchestraTestCase
 {
@@ -14,8 +16,8 @@ class TestCase extends OrchestraTestCase
     protected function getPackageProviders($app)
     {
         return [
-            \Statamic\Providers\StatamicServiceProvider::class,
-            \Wilderborn\Partyline\ServiceProvider::class,
+            StatamicServiceProvider::class,
+            ServiceProvider::class,
             \Statamic\StaticSite\ServiceProvider::class,
         ];
     }

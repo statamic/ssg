@@ -3,8 +3,10 @@
 namespace Tests\Localized;
 
 use Illuminate\Filesystem\Filesystem;
+use PHPUnit\Framework\Attributes\Test;
 use Statamic\Facades\Config;
 use Statamic\Facades\Site;
+use Statamic\Facades\URL;
 use Tests\Concerns\RunsGeneratorCommand;
 use Tests\TestCase;
 
@@ -40,7 +42,17 @@ class GenerateTest extends TestCase
         ]);
     }
 
-    /** @test */
+    protected function tearDown(): void
+    {
+        URL::enforceTrailingSlashes(false);
+        URL::clearUrlCache();
+
+        $this->files->delete([lang_path('en_US.json'), lang_path('fr_FR.json')]);
+
+        parent::tearDown();
+    }
+
+    #[Test]
     public function it_generates_pages_for_localized_site_fixture()
     {
         $files = $this->generate();
@@ -115,7 +127,7 @@ class GenerateTest extends TestCase
         $this->assertStringContainsString('<h1>Article Title: Le Five</h1>', $files['fr/le-articles/le-five/index.html']);
     }
 
-    /** @test */
+    #[Test]
     public function it_generates_localized_paginated_pages()
     {
         $this->files->put(resource_path('views/articles/index.antlers.html'), <<<'EOT'
@@ -176,7 +188,7 @@ EOT
         $this->assertStringContainsString('Prev Link: /fr/le-articles/page/1', $index);
     }
 
-    /** @test */
+    #[Test]
     public function it_generates_localized_pagination_with_custom_page_name_and_route()
     {
         // Here we'll override the `pagination_route`.
@@ -242,7 +254,7 @@ EOT
         $this->assertStringContainsString('Prev Link: /fr/le-articles/p-1', $index);
     }
 
-    /** @test */
+    #[Test]
     public function it_generates_associated_paginated_pages_when_generating_only_localized_urls_with_pagination()
     {
         $this->files->put(resource_path('views/articles/index.antlers.html'), <<<'EOT'
@@ -300,5 +312,97 @@ EOT
         $this->assertStringContainsString('Current Page: 2', $index);
         $this->assertStringContainsString('Total Pages: 2', $index);
         $this->assertStringContainsString('Prev Link: /fr/le-articles/page/1', $index);
+    }
+
+    #[Test]
+    public function it_translates_using_the_site_lang()
+    {
+        Site::setSites([
+            'default' => [
+                'name' => 'English',
+                'locale' => 'en_US',
+                'lang' => 'en_US',
+                'url' => '/',
+            ],
+            'french' => [
+                'name' => 'French',
+                'locale' => 'fr_FR',
+                'lang' => 'fr_FR',
+                'url' => '/fr/',
+            ],
+        ]);
+
+        $this->files->put(lang_path('en_US.json'), json_encode(['welcome' => 'Welcome']));
+        $this->files->put(lang_path('fr_FR.json'), json_encode(['welcome' => 'Bienvenue']));
+
+        $this->files->put(resource_path('views/default.antlers.html'), '<h1>{{ trans key="welcome" }}</h1>');
+
+        $files = $this->generate();
+
+        $this->assertStringContainsString('<h1>Welcome</h1>', $files['index.html']);
+        $this->assertStringContainsString('<h1>Bienvenue</h1>', $files['fr/index.html']);
+    }
+
+    #[Test]
+    public function it_enforces_trailing_slashes_when_config_enabled()
+    {
+        Config::set('statamic.ssg.enforce_trailing_slashes', true);
+
+        $files = $this->generate();
+
+        $index = $files['articles/index.html'];
+        $this->assertStringContainsString('<a href="http://cool-runnings.com/articles/one/">One</a>', $index);
+        $this->assertStringContainsString('<a href="http://cool-runnings.com/articles/two/">Two</a>', $index);
+        $this->assertStringContainsString('<a href="http://cool-runnings.com/articles/three/">Three</a>', $index);
+
+        $frIndex = $files['fr/le-articles/index.html'];
+        $this->assertStringContainsString('<a href="http://cool-runnings.com/fr/le-articles/le-one/">Le One</a>', $frIndex);
+        $this->assertStringContainsString('<a href="http://cool-runnings.com/fr/le-articles/le-two/">Le Two</a>', $frIndex);
+        $this->assertStringContainsString('<a href="http://cool-runnings.com/fr/le-articles/le-three/">Le Three</a>', $frIndex);
+    }
+
+    #[Test]
+    public function it_enforces_trailing_slashes_on_localized_paginated_urls_when_config_enabled()
+    {
+        Config::set('statamic.ssg.enforce_trailing_slashes', true);
+
+        $this->files->put(resource_path('views/articles/index.antlers.html'), <<<'EOT'
+{{ collection:articles sort="date:asc" paginate="3" as="articles" }}
+    {{ articles }}
+        <a href="{{ permalink }}">{{ title }}</a>
+    {{ /articles }}
+
+    {{ paginate }}
+        Current Page: {{ current_page }}
+        Total Pages: {{ total_pages }}
+        Prev Link: {{ prev_page }}
+        Next Link: {{ next_page }}
+    {{ /paginate }}
+{{ /collection:articles }}
+EOT
+        );
+
+        $files = $this->generate();
+
+        $index = $files['articles/index.html'];
+        $this->assertStringContainsString('Next Link: /articles/page/2/', $index);
+
+        $frIndex = $files['fr/le-articles/index.html'];
+        $this->assertStringContainsString('Next Link: /fr/le-articles/page/2/', $frIndex);
+
+        $frPage2 = $files['fr/le-articles/page/2/index.html'];
+        $this->assertStringContainsString('Prev Link: /fr/le-articles/page/1/', $frPage2);
+    }
+
+    #[Test]
+    public function it_still_generates_404_when_trailing_slashes_config_is_enabled()
+    {
+        Config::set('statamic.ssg.enforce_trailing_slashes', true);
+
+        $files = $this->generate();
+
+        $this->assertContains('404.html', array_keys($files));
+
+        $this->assertStringContainsString('<h1>404!</h1>', $files['404.html']);
     }
 }
