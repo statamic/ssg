@@ -212,7 +212,7 @@ class Generator
         $results = $this->tasks->run(...$closures);
 
         if ($message = $this->firstFailedTask($results)) {
-            throw GenerationFailedException::withConsoleMessage("\x1B[1A\x1B[2K".$message);
+            throw GenerationFailedException::withConsoleMessage($message);
         }
 
         $this->taskResults = $this->compileTasksResults($results);
@@ -512,7 +512,7 @@ class Generator
         $excluded = in_array($page->url(), $this->config['exclude']);
 
         if ($excluded && $outputError) {
-            $this->earlyTaskErrors[] = '<fg=red>[✘]</> '.URL::makeRelative($page->url()).' (Excluded in config/statamic/ssg.php)';
+            $this->earlyTaskErrors[] = URL::makeRelative($page->url()).' (Excluded in config/statamic/ssg.php)';
         }
 
         return $excluded;

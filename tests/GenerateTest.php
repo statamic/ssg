@@ -5,6 +5,7 @@ namespace Tests;
 use Illuminate\Filesystem\Filesystem;
 use PHPUnit\Framework\Attributes\Test;
 use Statamic\Facades\Config;
+use Statamic\Facades\Entry;
 use Statamic\Facades\URL;
 use Tests\Concerns\RunsGeneratorCommand;
 
@@ -422,5 +423,25 @@ EOT
         $this->assertContains('404.html', array_keys($files));
 
         $this->assertStringContainsString('<h1>404!</h1>', $files['404.html']);
+    }
+
+    #[Test]
+    public function it_lists_pages_generated_with_warnings_and_pages_not_generated()
+    {
+        Entry::make()
+            ->collection('articles')
+            ->slug('redirect')
+            ->data(['title' => 'Redirect', 'redirect' => '/articles'])
+            ->save();
+
+        Config::set('statamic.ssg.urls', ['/missing']);
+
+        $this
+            ->artisan('statamic:ssg:generate', ['--no-interaction' => true])
+            ->expectsOutputToContain('/articles/redirect (Resulted in a redirect to')
+            ->expectsOutputToContain('/missing (Resulted in 404)')
+            ->expectsOutputToContain('pages generated with warnings')
+            ->expectsOutputToContain('pages not generated')
+            ->assertSuccessful();
     }
 }
