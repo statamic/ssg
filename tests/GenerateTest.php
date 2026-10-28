@@ -2,10 +2,13 @@
 
 namespace Tests;
 
+use Exception;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Foundation\Vite;
 use PHPUnit\Framework\Attributes\Test;
 use Statamic\Facades\Config;
 use Statamic\Facades\URL;
+use Statamic\StaticSite\Generator;
 use Tests\Concerns\RunsGeneratorCommand;
 
 class GenerateTest extends TestCase
@@ -16,6 +19,9 @@ class GenerateTest extends TestCase
     {
         URL::enforceTrailingSlashes(false);
         URL::clearUrlCache();
+
+        $this->files->delete(public_path('hot'));
+        $this->files->deleteDirectory(public_path('build'));
 
         parent::tearDown();
     }
@@ -438,8 +444,6 @@ EOT
 
         $this->assertTrue($this->files->exists($this->destination.'/build/site.css'));
         $this->assertEquals('body { color: red; }', $this->files->get($this->destination.'/build/site.css'));
-
-        $this->files->deleteDirectory($source);
     }
 
     #[Test]
@@ -454,42 +458,35 @@ EOT
     }
 
     #[Test]
-    public function it_temporarily_moves_vite_hot_file_aside_during_generation()
+    public function it_ignores_vite_hot_file_during_generation()
     {
-        $hotFile = public_path('hot');
-        $hotFileHidden = public_path('hot.ssg-backup');
+        $this->files->put(public_path('hot'), 'http://localhost:5173');
+        $this->files->makeDirectory(public_path('build'), 0755, true);
+        $this->files->put(public_path('build/manifest.json'), json_encode([
+            'resources/css/site.css' => ['file' => 'assets/site-abc123.css', 'src' => 'resources/css/site.css', 'isEntry' => true],
+        ]));
 
-        $this->files->put($hotFile, 'http://localhost:5173');
+        $this->files->put(resource_path('views/default.antlers.html'), '{{ vite src="resources/css/site.css" }}');
 
-        $this->artisan('statamic:ssg:generate', ['--no-interaction' => true])
-            ->expectsOutputToContain('Vite hot file temporarily moved aside');
+        $files = $this->generate();
 
-        $this->assertTrue($this->files->exists($hotFile));
-        $this->assertFalse($this->files->exists($hotFileHidden));
-
-        $this->files->delete($hotFile);
+        $this->assertStringContainsString('build/assets/site-abc123.css', $files['index.html']);
+        $this->assertStringNotContainsString('localhost:5173', $files['index.html']);
+        $this->assertTrue(app(Vite::class)->isRunningHot());
     }
 
     #[Test]
-    public function it_restores_vite_hot_file_even_if_generation_fails()
+    public function it_restores_vite_even_if_generation_fails()
     {
-        $hotFile = public_path('hot');
-        $hotFileHidden = public_path('hot.ssg-backup');
+        $this->files->put(public_path('hot'), 'http://localhost:5173');
 
-        $this->files->put($hotFile, 'http://localhost:5173');
-
-        $this->partialMock(Filesystem::class)
-            ->shouldReceive('copyDirectory')
-            ->andThrow(new \Exception('Simulated failure'));
+        app(Generator::class)->after(fn () => throw new Exception('Simulated failure'));
 
         try {
             $this->artisan('statamic:ssg:generate', ['--no-interaction' => true]);
-        } catch (\Exception) {
+        } catch (Exception) {
         }
 
-        $this->assertTrue($this->files->exists($hotFile));
-        $this->assertFalse($this->files->exists($hotFileHidden));
-
-        $this->files->delete($hotFile);
+        $this->assertTrue(app(Vite::class)->isRunningHot());
     }
 }

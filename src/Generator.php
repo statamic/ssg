@@ -9,6 +9,7 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\Vite as ViteFacade;
 use League\Flysystem\Filesystem as Flysystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use ReflectionClass;
@@ -99,13 +100,9 @@ class Generator
             $this->disableClear = true;
         }
 
-        $hotFile = public_path('hot');
-        $hotFileHidden = public_path('hot.ssg-backup');
+        $vite = ViteFacade::getFacadeRoot();
 
-        if ($this->files->exists($hotFile)) {
-            $this->files->move($hotFile, $hotFileHidden);
-            Partyline::line('<info>[✔]</info> Vite hot file temporarily moved aside for generation.');
-        }
+        ViteFacade::swap(Vite::from($vite));
 
         try {
             $this
@@ -120,9 +117,7 @@ class Generator
                 call_user_func($this->after);
             }
         } finally {
-            if ($this->files->exists($hotFileHidden)) {
-                $this->files->move($hotFileHidden, $hotFile);
-            }
+            ViteFacade::swap($vite);
         }
     }
 
