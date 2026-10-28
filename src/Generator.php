@@ -25,6 +25,9 @@ use Statamic\Imaging\ImageGenerator;
 use Statamic\Imaging\StaticUrlBuilder;
 use Statamic\Statamic;
 use Statamic\Support\Str;
+use Symfony\Component\Console\Formatter\OutputFormatter;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Terminal;
 use Wilderborn\Partyline\Facade as Partyline;
 
 use function Laravel\Prompts\spin;
@@ -246,14 +249,20 @@ class Generator
                 ->reject(fn ($page) => $this->shouldRejectPage($page, true));
         }
 
-        $pages = spin(
-            fn () => $this->gatherAllPages(),
-            'Gathering content to be generated...',
-        );
+        $pages = $this->outputIsDecorated()
+            ? spin(fn () => $this->gatherAllPages(), 'Gathering content to be generated...')
+            : $this->gatherAllPages();
 
         Partyline::outputComponents()->info('Gathered content to be generated');
 
         return $pages;
+    }
+
+    private function outputIsDecorated(): bool
+    {
+        $output = Partyline::getOutput();
+
+        return $output instanceof OutputInterface && $output->isDecorated();
     }
 
     protected function gatherAllPages()
@@ -294,25 +303,19 @@ class Generator
 
                     $request->setPage($page);
 
-                    // Only write the "Generating" line when using a single worker.
-                    // Otherwise, the output will be messed up.
-                    if ($verbose && $this->workers === 1) {
-                        $this->writeGeneratingLine($page->url());
-                    }
+                    $this->writeGeneratingLine($page->url());
 
                     try {
                         $generated = $page->generate($request);
                     } catch (NotGeneratedException $e) {
-                        if ($this->shouldFail($e)) {
-                            return $e->consoleMessage();
-                        }
-
-                        if ($verbose && $this->workers === 1) {
-                            $this->clearCurrentLine();
-                        }
+                        $this->clearGeneratingLine();
 
                         if ($verbose) {
                             Partyline::outputComponents()->twoColumnDetail($page->url(), '<fg=red;options=bold>FAILED</>');
+                        }
+
+                        if ($this->shouldFail($e)) {
+                            return $e->consoleMessage();
                         }
 
                         $errors[] = $e->consoleMessage();
@@ -322,16 +325,18 @@ class Generator
                         Carbon::setToStringFormat($oldCarbonFormat);
                     }
 
+                    $this->clearGeneratingLine();
+
                     if ($generated->hasWarning()) {
                         if ($this->shouldFail($generated)) {
+                            if ($verbose) {
+                                Partyline::outputComponents()->twoColumnDetail($page->url(), '<fg=red;options=bold>FAILED</>');
+                            }
+
                             return $generated->consoleMessage();
                         }
 
                         $warnings[] = $generated->consoleMessage();
-                    }
-
-                    if ($verbose && $this->workers === 1) {
-                        $this->clearCurrentLine();
                     }
 
                     if ($verbose) {
@@ -344,6 +349,43 @@ class Generator
                 return compact('count', 'warnings', 'errors');
             };
         })->all();
+    }
+
+    /**
+     * Outputs a "Generating" line to the terminal. Very similar output-wise to Laravel's
+     * ->twoColumnDetail() method, but it allows for replacing the line later, for
+     * success/error statuses.
+     */
+    private function writeGeneratingLine(string $url): void
+    {
+        if (! $this->shouldWriteGeneratingLine()) {
+            return;
+        }
+
+        $width = min((new Terminal)->getWidth(), 150);
+        $dotCount = max(1, $width - mb_strwidth($url) - mb_strwidth('GENERATING') - 6);
+
+        Partyline::getOutput()->write(sprintf(
+            '  %s <fg=gray>%s</> <fg=blue;options=bold>GENERATING</>',
+            OutputFormatter::escape($url),
+            str_repeat('.', $dotCount),
+        ));
+    }
+
+    private function clearGeneratingLine(): void
+    {
+        if (! $this->shouldWriteGeneratingLine()) {
+            return;
+        }
+
+        Partyline::getOutput()->write("\r\x1B[2K");
+    }
+
+    private function shouldWriteGeneratingLine(): bool
+    {
+        return config('statamic.ssg.verbose')
+            && $this->workers === 1
+            && $this->outputIsDecorated();
     }
 
     protected function outputTasksResults()
@@ -532,27 +574,5 @@ class Generator
         $factory->setAccessible(true);
 
         return Arr::get($factory->invoke($date)->getSettings(), 'toStringFormat');
-    }
-
-    /**
-     * Outputs a "Generating" line to the terminal. Very similar output-wise to Laravel's
-     * ->twoColumnDetail() method, but it allows for replacing the line later, for
-     * success/error statuses.
-     */
-    private function writeGeneratingLine(string $url): void
-    {
-        $dotsLen = max(1, 150 - strlen($url) - strlen('GENERATING') - 6);
-
-        $line = sprintf("  %s \033[90m%s\033[0m \033[34;1mGENERATING\033[0m",
-            $url,
-            str_repeat('.', $dotsLen)
-        );
-
-        fwrite(STDERR, $line);
-    }
-
-    private function clearCurrentLine(): void
-    {
-        fwrite(STDERR, "\r\x1B[2K");
     }
 }

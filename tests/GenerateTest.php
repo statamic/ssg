@@ -444,4 +444,16 @@ EOT
             ->expectsOutputToContain('pages not generated')
             ->assertSuccessful();
     }
+
+    #[Test]
+    public function it_doesnt_output_a_line_for_each_page_when_verbose_is_disabled()
+    {
+        Config::set('statamic.ssg.verbose', false);
+
+        $this
+            ->artisan('statamic:ssg:generate', ['--no-interaction' => true])
+            ->doesntExpectOutputToContain('/articles/one')
+            ->expectsOutputToContain('Generated 13 content files')
+            ->assertSuccessful();
+    }
 }
