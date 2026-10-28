@@ -128,6 +128,14 @@ class Generator
             new Flysystem(new LocalFilesystemAdapter($this->config['destination'].'/'.$directory))
         );
 
+        // Point the glide cache disk to the same location, so that anything
+        // reading generated images back (e.g. the glide:data_url tag) will
+        // find them where the server wrote them.
+        config([
+            'statamic.assets.image_manipulation.cache' => true,
+            'statamic.assets.image_manipulation.cache_path' => $this->config['destination'].'/'.$directory,
+        ]);
+
         $this->app->bind(UrlBuilder::class, function () use ($directory) {
             return new StaticUrlBuilder($this->app[ImageGenerator::class], [
                 'route' => URL::tidy($this->config['base_url'].'/'.$directory),
@@ -432,7 +440,7 @@ class Generator
         // Set the locale for dates, carbon, and for the translator.
         // This is what happens in Statamic's Localize middleware.
         setlocale(LC_TIME, $site->locale());
-        app()->setLocale($site->shortLocale());
+        app()->setLocale($site->lang());
     }
 
     protected function checkConcurrencySupport()
