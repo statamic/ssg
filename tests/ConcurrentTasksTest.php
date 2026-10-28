@@ -2,6 +2,8 @@
 
 namespace Tests;
 
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Fork\Fork;
 use Statamic\StaticSite\ConcurrentTasks;
@@ -20,10 +22,40 @@ class ConcurrentTasksTest extends TestCase
         };
 
         $fork = $this->mock(Fork::class);
+        $fork->shouldReceive('before')->once()->andReturnSelf();
         $fork->shouldReceive('run')->once()->with($one, $two)->andReturn([$one(), $two()]);
 
         $results = (new ConcurrentTasks($fork))->run($one, $two);
 
         $this->assertEquals(['one', 'two'], $results);
+    }
+
+    /**
+     * @see https://github.com/statamic/ssg/issues/61
+     */
+    #[Test]
+    public function it_gives_each_child_its_own_connections()
+    {
+        $beforeChild = null;
+
+        $fork = $this->mock(Fork::class);
+        $fork->shouldReceive('before')->once()->andReturnUsing(function ($child) use (&$beforeChild, $fork) {
+            $beforeChild = $child;
+
+            return $fork;
+        });
+        $fork->shouldReceive('run')->once()->andReturn([]);
+
+        (new ConcurrentTasks($fork))->run(fn () => null);
+
+        $parentPdo = DB::connection()->getPdo();
+
+        Redis::shouldReceive('connections')->once()->andReturn(['default' => null, 'cache' => null]);
+        Redis::shouldReceive('purge')->once()->with('default');
+        Redis::shouldReceive('purge')->once()->with('cache');
+
+        $beforeChild();
+
+        $this->assertNotSame($parentPdo, DB::connection()->getPdo());
     }
 }
