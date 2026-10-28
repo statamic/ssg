@@ -9,6 +9,7 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\Vite as ViteFacade;
 use League\Flysystem\Filesystem as Flysystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use ReflectionClass;
@@ -111,6 +112,10 @@ class Generator
             $this->disableClear = true;
         }
 
+        $vite = ViteFacade::getFacadeRoot();
+
+        ViteFacade::swap(Vite::from($vite));
+
         $this
             ->bindGlide()
             ->clearDirectory()
@@ -128,6 +133,8 @@ class Generator
 
             call_user_func($after);
         }
+
+        ViteFacade::swap($vite);
     }
 
     public function bindGlide()
@@ -194,6 +201,12 @@ class Generator
     {
         foreach ($this->config['copy'] ?? [] as $source => $dest) {
             $dest = $this->config['destination'].'/'.$dest;
+
+            if (! $this->files->exists($source)) {
+                Partyline::line("<fg=yellow>[!]</> $source was not copied because it does not exist.");
+
+                continue;
+            }
 
             if (is_file($source)) {
                 $this->files->copy($source, $dest);
@@ -292,6 +305,7 @@ class Generator
                 $count = 0;
                 $warnings = [];
                 $errors = [];
+                $verbose = config('statamic.ssg.verbose');
 
                 foreach ($pages as $page) {
                     $oldCarbonFormat = $this->getToStringFormat();
@@ -308,7 +322,9 @@ class Generator
 
                     $request->setPage($page);
 
-                    Partyline::line("\x1B[1A\x1B[2KGenerating ".$page->url());
+                    if ($verbose) {
+                        Partyline::line("\x1B[1A\x1B[2KGenerating ".$page->url());
+                    }
 
                     try {
                         $generated = $page->generate($request);
