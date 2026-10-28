@@ -36,7 +36,8 @@ class Generator
     protected $tasks;
     protected $config;
     protected $request;
-    protected $after;
+    protected $after = [];
+    protected $skipAfter = [];
     protected $extraUrls;
     protected $workers = 1;
     protected $earlyTaskErrors = [];
@@ -71,9 +72,20 @@ class Generator
         return $this;
     }
 
-    public function after($after)
+    public function after($after, ?string $id = null)
     {
-        $this->after = $after;
+        if ($id) {
+            $this->after[$id] = $after;
+        } else {
+            $this->after[] = $after;
+        }
+
+        return $this;
+    }
+
+    public function skipAfter(string $id)
+    {
+        $this->skipAfter[] = $id;
 
         return $this;
     }
@@ -112,8 +124,14 @@ class Generator
             ->copyFiles()
             ->outputSummary();
 
-        if ($this->after) {
-            call_user_func($this->after);
+        foreach ($this->after as $id => $after) {
+            if (in_array($id, $this->skipAfter, true)) {
+                Partyline::line("<comment>Skipping [{$id}] after callback</comment>");
+
+                continue;
+            }
+
+            call_user_func($after);
         }
 
         ViteFacade::swap($vite);

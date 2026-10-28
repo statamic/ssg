@@ -105,6 +105,22 @@ class AppServiceProvider extends Provider
 }
 ```
 
+Every registered callback will be run, in the order they were registered.
+
+You may give a callback an ID as the second argument. Registering another callback with the same ID will replace it:
+
+```php
+SSG::after(function () {
+    // eg. generate redirect pages
+}, id: 'redirects');
+```
+
+You may also skip a callback registered by someone else, like an addon, using its ID:
+
+```php
+SSG::skipAfter('redirects');
+```
+
 
 ## Glide Images
 

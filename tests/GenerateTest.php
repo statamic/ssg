@@ -7,6 +7,7 @@ use Illuminate\Foundation\Vite;
 use PHPUnit\Framework\Attributes\Test;
 use Statamic\Facades\Config;
 use Statamic\Facades\URL;
+use Statamic\StaticSite\SSG;
 use Tests\Concerns\RunsGeneratorCommand;
 
 class GenerateTest extends TestCase
@@ -471,5 +472,61 @@ EOT
         $this->assertStringContainsString('build/assets/site-abc123.css', $files['index.html']);
         $this->assertStringNotContainsString('localhost:5173', $files['index.html']);
         $this->assertTrue(app(Vite::class)->isRunningHot());
+    }
+
+    #[Test]
+    public function it_runs_every_after_callback()
+    {
+        $called = [];
+
+        SSG::after(function () use (&$called) {
+            $called[] = 'first';
+        });
+
+        SSG::after(function () use (&$called) {
+            $called[] = 'second';
+        });
+
+        $this->generate();
+
+        $this->assertEquals(['first', 'second'], $called);
+    }
+
+    #[Test]
+    public function it_replaces_an_after_callback_registered_with_the_same_id()
+    {
+        $called = [];
+
+        SSG::after(function () use (&$called) {
+            $called[] = 'original';
+        }, 'redirects');
+
+        SSG::after(function () use (&$called) {
+            $called[] = 'replacement';
+        }, 'redirects');
+
+        $this->generate();
+
+        $this->assertEquals(['replacement'], $called);
+    }
+
+    #[Test]
+    public function it_skips_after_callbacks()
+    {
+        $called = [];
+
+        SSG::after(function () use (&$called) {
+            $called[] = 'redirects';
+        }, 'redirects');
+
+        SSG::after(function () use (&$called) {
+            $called[] = 'deploy';
+        });
+
+        SSG::skipAfter('redirects');
+
+        $this->generate();
+
+        $this->assertEquals(['deploy'], $called);
     }
 }
