@@ -344,6 +344,19 @@ EOT
     }
 
     #[Test]
+    public function it_uses_site_specific_views()
+    {
+        $this->files->put(resource_path('views/default.antlers.html'), '<h1>Default view</h1>');
+        $this->files->makeDirectory(resource_path('views/french'));
+        $this->files->put(resource_path('views/french/default.antlers.html'), '<h1>French view</h1>');
+
+        $files = $this->generate();
+
+        $this->assertStringContainsString('<h1>Default view</h1>', $files['index.html']);
+        $this->assertStringContainsString('<h1>French view</h1>', $files['fr/index.html']);
+    }
+
+    #[Test]
     public function it_enforces_trailing_slashes_when_config_enabled()
     {
         Config::set('statamic.ssg.enforce_trailing_slashes', true);
