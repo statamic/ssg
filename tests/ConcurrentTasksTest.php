@@ -58,4 +58,27 @@ class ConcurrentTasksTest extends TestCase
 
         $this->assertNotSame($parentPdo, DB::connection()->getPdo());
     }
+
+    #[Test]
+    public function it_skips_connections_that_are_not_configured()
+    {
+        $beforeChild = null;
+
+        $fork = $this->mock(Fork::class);
+        $fork->shouldReceive('before')->once()->andReturnUsing(function ($child) use (&$beforeChild, $fork) {
+            $beforeChild = $child;
+
+            return $fork;
+        });
+        $fork->shouldReceive('run')->once()->andReturn([]);
+
+        (new ConcurrentTasks($fork))->run(fn () => null);
+
+        // Statamic's fake SQL query logging registers a connection like this when app.debug is on.
+        $fake = DB::connectUsing('fake', ['driver' => 'sqlite', 'database' => ':memory:']);
+
+        $beforeChild();
+
+        $this->assertSame($fake, DB::connection('fake'));
+    }
 }

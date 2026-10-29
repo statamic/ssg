@@ -2,8 +2,10 @@
 
 namespace Statamic\StaticSite;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Str;
 use Spatie\Fork\Fork;
 
 class ConcurrentTasks implements Tasks
@@ -29,6 +31,11 @@ class ConcurrentTasks implements Tasks
         }
 
         foreach (array_keys(DB::getConnections()) as $connection) {
+            // Connections made at runtime (eg. Statamic's fake SQL query logging) can't be reconnected.
+            if (! Arr::get(config('database.connections'), Str::before($connection, '::'))) {
+                continue;
+            }
+
             DB::reconnect($connection);
         }
     }
