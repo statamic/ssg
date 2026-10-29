@@ -1,5 +1,12 @@
 # Release Notes
 
+## 4.2.1 (2026-10-29)
+
+### What's fixed
+- Fix generation failing when debug mode is on and spatie/fork is installed [#232](https://github.com/statamic/ssg/issues/232) by @mynetx
+
+
+
 ## 4.2.0 (2026-10-28)
 
 ### What's new
