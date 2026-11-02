@@ -8,6 +8,8 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\RedirectResponse;
 use Statamic\Facades\Blink;
 use Statamic\Facades\URL;
+use Statamic\Http\Middleware\AddViewPaths;
+use Throwable;
 
 class Page
 {
@@ -56,7 +58,7 @@ class Page
         }
 
         try {
-            $response = $this->content->toResponse($request);
+            $response = $this->toResponse($request);
         } catch (HttpResponseException $e) {
             $response = $e->getResponse();
             throw_unless($response instanceof RedirectResponse, $e);
@@ -69,6 +71,30 @@ class Page
         $this->files->put($this->path(), $html);
 
         return new GeneratedPage($this, $response);
+    }
+
+    protected function toResponse($request)
+    {
+        // The finder caches resolved views by name, but they can differ per site.
+        view()->getFinder()->flush();
+
+        // Routes go through the HTTP kernel, which already adds the site specific view paths.
+        if ($this->content instanceof Route) {
+            return $this->content->toResponse($request);
+        }
+
+        // Catch inside the middleware so it always restores the view paths for the next page.
+        $response = (new AddViewPaths)->handle($request, function ($request) use (&$e) {
+            try {
+                return $this->content->toResponse($request);
+            } catch (Throwable $e) {
+                return null;
+            }
+        });
+
+        throw_if($e, $e);
+
+        return $response;
     }
 
     protected function writePaginatedPages($request, $paginator)
