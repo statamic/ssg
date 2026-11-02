@@ -1,5 +1,12 @@
 # Release Notes
 
+## 4.2.2 (2026-11-02)
+
+### What's fixed
+- Fix site specific views being ignored during generation [#234](https://github.com/statamic/ssg/issues/234) by @mynetx
+
+
+
 ## 4.2.1 (2026-10-29)
 
 ### What's fixed
