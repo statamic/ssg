@@ -42,11 +42,6 @@ jobs:
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
           coverage: none
 
-      - name: Require Laravel's PHP 8.6 branch
-        shell: bash
-        if: matrix.php == '8.6'
-        run: composer require "laravel/framework:dev-13/php86-experiment as 13.40.0" --no-interaction --no-update
-
       - name: Install dependencies
         shell: bash
         env:
